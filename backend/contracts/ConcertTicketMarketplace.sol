@@ -53,7 +53,10 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
         uint256 seatId
     );
 
-    constructor(string memory _name, string memory _symbol) ERC721(_name, _symbol) Ownable(msg.sender) {}
+    constructor(
+        string memory _name,
+        string memory _symbol
+    ) ERC721(_name, _symbol) Ownable(msg.sender) {}
 
     function createEvent(
         string memory _name,
@@ -68,12 +71,46 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
 
         if (_isAssignedSeating) {
             require(_totalSeats > 0, "Total seats must be greater than 0");
-            events[nextEventId] = Event(nextEventId, _name, _date, _ticketPrice, _totalSeats, 0, msg.sender, true, _totalSeats);
-            emit EventCreatedWithAssignedSeating(nextEventId, _name, _date, _ticketPrice, _totalSeats, msg.sender);
+            events[nextEventId] = Event(
+                nextEventId,
+                _name,
+                _date,
+                _ticketPrice,
+                _totalSeats,
+                0,
+                msg.sender,
+                true,
+                _totalSeats
+            );
+            emit EventCreatedWithAssignedSeating(
+                nextEventId,
+                _name,
+                _date,
+                _ticketPrice,
+                _totalSeats,
+                msg.sender
+            );
         } else {
             require(_totalSupply > 0, "Total supply must be greater than 0");
-            events[nextEventId] = Event(nextEventId, _name, _date, _ticketPrice, _totalSupply, 0, msg.sender, false, 0);
-            emit EventCreated(nextEventId, _name, _date, _ticketPrice, _totalSupply, msg.sender);
+            events[nextEventId] = Event(
+                nextEventId,
+                _name,
+                _date,
+                _ticketPrice,
+                _totalSupply,
+                0,
+                msg.sender,
+                false,
+                0
+            );
+            emit EventCreated(
+                nextEventId,
+                _name,
+                _date,
+                _ticketPrice,
+                _totalSupply,
+                msg.sender
+            );
         }
         nextEventId++;
     }
@@ -82,11 +119,17 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
         require(_eventId > 0 && _eventId < nextEventId, "Event not found");
         Event storage currentEvent = events[_eventId];
 
-        require(block.timestamp < currentEvent.date, "Event has already passed");
+        require(
+            block.timestamp < currentEvent.date,
+            "Event has already passed"
+        );
         require(msg.value >= currentEvent.ticketPrice, "Insufficient payment");
 
         if (currentEvent.isAssignedSeating) {
-            require(_seatId > 0 && _seatId <= currentEvent.totalSeats, "Invalid seat ID");
+            require(
+                _seatId > 0 && _seatId <= currentEvent.totalSeats,
+                "Invalid seat ID"
+            );
             require(!seatSold[_eventId][_seatId], "Seat is already sold");
 
             seatSold[_eventId][_seatId] = true;
@@ -94,22 +137,30 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
             _safeMint(msg.sender, nextTokenId);
             emit TicketPurchased(_eventId, nextTokenId, msg.sender, _seatId);
         } else {
-            require(currentEvent.sold < currentEvent.totalSupply, "Event is sold out");
+            require(
+                currentEvent.sold < currentEvent.totalSupply,
+                "Event is sold out"
+            );
             tickets[nextTokenId] = Ticket(_eventId, 0);
             _safeMint(msg.sender, nextTokenId);
             emit TicketPurchased(_eventId, nextTokenId, msg.sender, 0);
         }
-        
+
         currentEvent.sold++;
         nextTokenId++;
     }
 
-    function getEventDetails(uint256 _eventId) public view returns (Event memory) {
+    function getEventDetails(
+        uint256 _eventId
+    ) public view returns (Event memory) {
         require(_eventId > 0 && _eventId < nextEventId, "Event not found");
         return events[_eventId];
     }
 
-    function isSeatSold(uint256 _eventId, uint256 _seatId) public view returns (bool) {
+    function isSeatSold(
+        uint256 _eventId,
+        uint256 _seatId
+    ) public view returns (bool) {
         require(_eventId > 0 && _eventId < nextEventId, "Event not found");
         return seatSold[_eventId][_seatId];
     }
@@ -117,13 +168,17 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
     function getAllEvents() public view returns (Event[] memory) {
         uint256 eventCount = nextEventId - 1;
         Event[] memory allEvents = new Event[](eventCount);
+        // O loop começa em 1 porque os IDs dos eventos começam em 1
         for (uint256 i = 1; i <= eventCount; i++) {
-            allEvents[i-1] = events[i];
+            // CORREÇÃO: Usar i-1 para preencher o array desde o índice 0
+            allEvents[i - 1] = events[i];
         }
         return allEvents;
     }
 
-    function getTicketsOfOwner(address _owner) public view returns (uint256[] memory) {
+    function getTicketsOfOwner(
+        address _owner
+    ) public view returns (uint256[] memory) {
         uint256 balance = balanceOf(_owner);
         uint256[] memory tokenIds = new uint256[](balance);
         for (uint256 i = 0; i < balance; i++) {
@@ -134,27 +189,24 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
 
     // The following functions are overrides required by Solidity.
 
-    function _update(address to, uint256 tokenId, address auth)
-        internal
-        override(ERC721Enumerable)
-        returns (address)
-    {
+    function _update(
+        address to,
+        uint256 tokenId,
+        address auth
+    ) internal override(ERC721Enumerable) returns (address) {
         return super._update(to, tokenId, auth);
     }
 
-    function _increaseBalance(address account, uint128 amount)
-        internal
-        override(ERC721Enumerable)
-    {
+    function _increaseBalance(
+        address account,
+        uint128 amount
+    ) internal override(ERC721Enumerable) {
         super._increaseBalance(account, amount);
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC721Enumerable)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC721Enumerable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }
