@@ -8,7 +8,7 @@ if (window.ethereum) {
 } else {
   console.error("Please install MetaMask!");
   // Fallback to a read-only provider if MetaMask is not available
-  provider = ethers.getDefaultProvider('http://localhost:8545');
+  provider = new ethers.JsonRpcProvider('http://localhost:8545');
 }
 
 const getSigner = async () => {
@@ -25,7 +25,9 @@ const getContract = async (withSigner = false) => {
       const signer = await getSigner();
       return new ethers.Contract(contractAddress.address, contractAbi, signer);
     }
-    return new ethers.Contract(contractAddress.address, contractAbi, provider);
+    // For read-only operations, always use local provider to ensure we connect to local blockchain
+    const localProvider = new ethers.JsonRpcProvider('http://localhost:8545');
+    return new ethers.Contract(contractAddress.address, contractAbi, localProvider);
   } catch (error) {
     console.error("Error getting contract:", error);
     throw error;

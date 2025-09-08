@@ -56,7 +56,7 @@ In a **new terminal**, deploy the contract to the local node:
 # Navigate to the backend directory
 cd backend
 
-# Deploy the contract
+# Deploy the contract (this will automatically create sample events and copy files to frontend)
 npx hardhat run scripts/deploy.js --network localhost
 ```
 
@@ -72,18 +72,18 @@ cd frontend
 npm install
 ```
 
-You will need to copy the contract's ABI and deployed address to the frontend. After deployment:
-1.  Copy the ABI from `backend/artifacts/contracts/ConcertTicketMarketplace.sol/ConcertTicketMarketplace.json` to `frontend/src/contract-abi.json`.
-2.  Copy the deployed address from `backend/deployment-address.json` to `frontend/src/contract-address.json`.
+The deployment script automatically handles copying the contract ABI and address to the frontend, so no manual file copying is needed.
 
-Finally, start the frontend development server:
+Start the frontend development server:
 
 ```bash
 # Start the app
 npm run dev
 ```
 
-You can now access the dApp at `http://localhost:5173` (or the address provided by Vite).
+You can now access the dApp at `http://localhost:5173` (or the address provided by Vite). The deployment script has already created two sample events for testing:
+- **Rock Fest 2025** - General admission event with 100 tickets at 0.05 ETH each
+- **Jazz Night** - Assigned seating event with 150 seats at 0.1 ETH each
 
 ## Running Tests
 
@@ -106,3 +106,24 @@ To run the component and integration tests for the React app:
 cd frontend
 npm test
 ```
+
+## Troubleshooting
+
+### Common Issues
+
+**Events not loading / "Error fetching events"**
+- Ensure the Hardhat local node is running (`npx hardhat node` in backend directory)
+- Make sure you redeployed after starting the node (`npx hardhat run scripts/deploy.js --network localhost`)
+- Check that your MetaMask is connected to the local network (http://localhost:8545, Chain ID: 31337)
+
+**MetaMask Connection Issues**
+- Make sure MetaMask is installed and unlocked
+- Add the local Hardhat network to MetaMask:
+  - Network Name: Hardhat Local
+  - RPC URL: http://localhost:8545
+  - Chain ID: 31337
+  - Currency Symbol: ETH
+
+**Transaction Failures**
+- Ensure you have sufficient ETH balance in your MetaMask account
+- Import one of the Hardhat test accounts for development (private keys shown when running `npx hardhat node`)
