@@ -3,7 +3,7 @@
 **Feature Branch**: `002-build-a-concert`  
 **Created**: 2025-09-08  
 **Status**: Draft  
-**Input**: User description: "build a concert ticket marketplace app. **1. User Authentication & Profile:** - Users can sign up and log in using email/password and also via Google Sign-In. - The user profile must contain: user's full name, a profile picture, and two sections for tickets: "Upcoming" and "Past". - Each ticket in the profile should be displayed as a card with the event name, date, and location. Clicking the card reveals a QR code for entry. **2. Event Listings & Discovery:** - The main screen shows a list of available concerts with a large image, event name, date, and starting price. - Users can filter the list by: - Date (e.g., "This Weekend", "Next Month") - Category (e.g., "Rock", "Pop", "Samba") - Price Range (using a slider). - Users can also sort the filtered results by date (newest first) or price (lowest first). - A search bar allows users to find events by artist or venue name. - Events that are sold out or have already passed should not appear in the main list. **3. Purchasing Flow:** - On an event's detail page, users can see a full description, venue map, and available ticket types (e.g., "General Admission", "VIP"). - Users select the ticket type and quantity. - The checkout process is simulated: after confirming the selection, the tickets are instantly "purchased" and added to the user's profile under the "Upcoming" section. No real payment will be processed. - A confirmation message should be displayed on the screen after the purchase is complete."
+**Input**: User description: "build a concert ticket marketplace app. **1. User Authentication & Profile:** - Users can sign up and log in using email/password and also via Google Sign-In. - The user profile must contain: user's full name, a profile picture, and two sections for tickets: "Upcoming" and "Past". - Each ticket in the profile should be displayed as a card with the event name, date, and location. Clicking the card reveals a QR code for entry. **2. Event Listings & Discovery:** - The main screen shows a list of available concerts with a large image, event name, date, and starting price. - Users can filter the list by: - Date (e.g., "This Weekend", "Next Month") - Category (e.g., "Rock", "Pop", "Samba") - Price Range (using a slider). - Users can also sort the filtered results by date (newest first) or price (lowest first). - A search bar allows users to find events by artist or venue name. - Events that are sold out or have already passed should not appear in the main list. **3. Purchasing Flow:** - On an event's detail page, users can see a full description, venue map, and available ticket types (e.g., "General Admission", "VIP"). - Users select the ticket type and quantity. - The checkout process is simulated: after confirming the selection, the tickets are instantly "purchased" and added to the user's profile under the "Upcoming" section - A confirmation message should be displayed on the screen after the purchase is complete."
 
 ---
 
@@ -21,9 +21,9 @@ As a user, I want to easily find, purchase, and manage my concert tickets so I c
 6. **Given** a user is in their profile, **When** they click on an upcoming ticket, **Then** a QR code is displayed.
 
 ### Edge Cases
-- What happens if a user's Google Sign-In email is already associated with an email/password account?
-- How does the system handle a user trying to purchase more tickets than are available for a specific type?
-- What is displayed if a user has no upcoming or past tickets in their profile?
+- What happens if a user's Google Sign-In email is already associated with an email/password account? The system should prompt the user to link the accounts. If the user denies permission, the sign-in/sign-up process will be halted, preventing the creation of another account with the same email.
+- How does the system handle a user trying to purchase more tickets than are available for a specific type? The system will display an error message explaining that the selected quantity of tickets is not available.
+- What is displayed if a user has no upcoming or past tickets in their profile? A message will be displayed in the corresponding section indicating that there are no tickets to show (e.g., "You have no upcoming tickets").
 
 ## Requirements *(mandatory)*
 
@@ -37,7 +37,7 @@ As a user, I want to easily find, purchase, and manage my concert tickets so I c
 - **FR-007**: Users MUST be able to sort filtered results by date (newest first) or price (lowest first).
 - **FR-008**: A search bar MUST allow users to find events by artist or venue.
 - **FR-009**: The event detail page MUST show a full description, venue map, and available ticket types.
-- **FR-010**: The ticket purchase process MUST be simulated (no real payment).
+- **FR-010**: The ticket purchase process MUST be simulated.
 - **FR-011**: After purchase, tickets MUST be added to the user's "Upcoming" tickets and a confirmation message displayed.
 - **FR-012**: The system needs a way to move tickets from "Upcoming" to "Past". [NEEDS CLARIFICATION: Should this be an automatic process that runs daily, or a manual action?]
 

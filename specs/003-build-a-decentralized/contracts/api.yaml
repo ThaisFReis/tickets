@@ -1,0 +1,33 @@
+openapi: 3.0.0
+info:
+  title: Concert Ticket Marketplace API
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    ConcertEvent:
+      type: object
+      properties:
+        eventId:
+          type: integer
+        name:
+          type: string
+        date:
+          type: integer
+        category:
+          type: string
+        price:
+          type: integer
+        totalTickets:
+          type: integer
+        soldTickets:
+          type: integer
+    TicketNFT:
+      type: object
+      properties:
+        tokenId:
+          type: integer
+        eventId:
+          type: integer
+        owner:
+          type: string

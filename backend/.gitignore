@@ -1,0 +1,13 @@
+# Hardhat
+node_modules
+.env
+coverage
+coverage.json
+typechain-types
+
+# Slither
+slither.db.json
+
+# Misc
+.DS_Store
+yarn-error.log
