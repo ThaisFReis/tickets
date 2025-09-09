@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { X, ArrowUpRight } from 'lucide-react';
-import { QRCode } from 'qrcode.react';
+import QrCode from 'qrcode.react';
 
 const ViewTicketModal = ({ ticket, onClose }) => {
     if (!ticket) return null;
@@ -29,7 +29,7 @@ const ViewTicketModal = ({ ticket, onClose }) => {
                 <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto">
                     {/* QR Code Section */}
                     <div className="flex flex-col items-center justify-center bg-white/90 p-6 rounded-xl">
-                        <QRCode 
+                        <QrCode 
                             value={`TicketChain-NFT-${ticket.tokenId}`}
                             size={250}
                             bgColor={"#FFFFFF"}
