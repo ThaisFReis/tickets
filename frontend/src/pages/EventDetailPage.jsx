@@ -76,10 +76,10 @@ const EventDetailPage = ({ event, onPurchase, onNavigateBack, walletConnected })
                     <img 
                         src={event.image} 
                         alt={event.name} 
-                        className="w-full rounded-2xl object-cover mb-6 border-2 border-border shadow-lg"
+                        className="w-4/5 rounded-2xl object-cover mb-6 border-2 border-border shadow-lg"
                     />
-                    <h1 className="text-6xl font-extrabold uppercase text-glow">{event.name}</h1>
-                    <p className="text-lg text-secondary font-semibold mt-2">{event.venue}</p>
+                    <h1 className="text-6xl font-extrabold uppercase text-glow2">{event.name}</h1>
+                    <p className="text-lg text-primary font-medium mt-2">{event.venue}</p>
                     <div className="mt-6 text-lg text-muted-foreground">
                         <p>{event.description}</p>
                     </div>

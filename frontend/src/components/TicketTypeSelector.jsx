@@ -8,7 +8,7 @@ const TicketTypeSelector = ({ tiers, selectedTier, onSelectTier }) => {
         <button
           key={tier.tierId}
           onClick={() => onSelectTier(tier)}
-          className={`tier-btn p-3 rounded-xl text-center font-semibold uppercase transition-colors ${
+          className={`normal-bnt p-3 rounded-xl text-center font-semibold uppercase transition-colors text-sm lg:text-base ${
             selectedTier?.tierId === tier.tierId
               ? 'border-2 border-primary bg-primary/20'
               : 'border border-border hover:bg-primary/10'

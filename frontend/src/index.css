@@ -83,6 +83,19 @@ body {
     transform: scale(1.1);
     box-shadow: 0 0 30px 0 oklch(0.8 0.3 320 / 0.8);
 }
+.normal-bnt:hover{
+    background: linear-gradient(45deg, oklch(0.7 0.3 280), oklch(0.8 0.3 320));
+    color: oklch(1 0 0);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 0 20px 0 oklch(0.8 0.3 320 / 0.6);
+    transition: all 0.2s ease-out;
+}
 .text-glow {
-    text-shadow: 0 0 12px oklch(1 0 0 / 0.8);
+    text-shadow: 0 0 10px oklch(1 0 0 / 0.8);
+}
+
+.text-glow2 {
+    text-shadow: 0 0 5px oklch(1 0 0 / 0.8);
 }

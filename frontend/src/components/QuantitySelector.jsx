@@ -18,14 +18,14 @@ const QuantitySelector = ({ quantity, setQuantity }) => {
       <div className="flex items-center gap-4">
         <button 
           onClick={handleDecrement}
-          className="p-3 border border-border rounded-full hover:bg-primary/20 transition-colors"
+          className="normal-bnt p-3 border border-border rounded-full transition-colors"
         >
           <Minus size={16} />
         </button>
         <span className="text-2xl font-bold w-8 text-center">{quantity}</span>
         <button 
           onClick={handleIncrement}
-          className="p-3 border border-border rounded-full hover:bg-primary/20 transition-colors"
+          className="normal-bnt p-3 border border-border rounded-full transition-colors"
         >
           <Plus size={16} />
         </button>
