@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketChain - View Ticket Modal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="theme_hybrid_glass_y2k.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@600;800&family=Fira+Code&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+        body { background-color: var(--background); color: var(--foreground); font-family: var(--font-sans); overflow-x: hidden; }
+        .gradient-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(120deg, oklch(0.1 0.02 250), oklch(0.15 0.05 280)); z-index: -1; }
+        .shape1 { position: absolute; top: 5vh; left: -15vw; width: 45vw; height: 45vw; background: radial-gradient(circle, oklch(0.3 0.2 280 / 0.3), transparent 60%); border-radius: 50%; animation: move1 20s infinite alternate ease-in-out; }
+        .shape2 { position: absolute; bottom: 0vh; right: -20vw; width: 55vw; height: 55vw; background: radial-gradient(circle, oklch(0.35 0.2 320 / 0.25), transparent 70%); border-radius: 50%; animation: move2 25s infinite alternate ease-in-out; }
+        @keyframes move1 { from { transform: translate(0, 0) rotate(0deg); } to { transform: translate(25vw, 15vh) rotate(90deg); } }
+        @keyframes move2 { from { transform: translate(0, 0) rotate(0deg); } to { transform: translate(-25vw, -20vh) rotate(-90deg); } }
+        .glass-ui { background-color: var(--card); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
+        .text-glow { text-shadow: 0 0 12px oklch(1 0 0 / 0.8); }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="gradient-bg"><div class="shape1"></div><div class="shape2"></div></div>
+
+    <!-- View Ticket Modal -->
+    <div id="view-ticket-modal" class="fixed inset-0 z-50 flex justify-center items-center w-full h-full bg-black/60 p-4">
+        <div class="relative glass-ui w-full max-w-3xl max-h-[90vh] flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-4 border-b border-border/50 flex-shrink-0">
+                <h3 class="text-xl font-bold uppercase tracking-wider">Synthwave Revival - Floor Ticket</h3>
+                <button class="text-muted-foreground hover:text-foreground"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto">
+                <!-- QR Code Section -->
+                <div class="flex flex-col items-center justify-center bg-white/90 p-6 rounded-xl">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=TicketChain-NFT-0x1A2b...c3D4e-77" alt="Ticket QR Code" class="w-full max-w-[250px] rounded-lg aspect-square">
+                </div>
+
+                <!-- Info Section -->
+                <div class="flex flex-col gap-6">
+                    <div>
+                        <h2 class="text-4xl lg:text-5xl font-extrabold uppercase text-glow">Synthwave Revival</h2>
+                        <p class="text-lg text-secondary font-semibold mt-1">Fri, Dec 15, 9:00 PM</p>
+                        <p class="text-md text-muted-foreground mt-1">The Grid, Neo-Kyoto</p>
+                    </div>
+                    
+                    <div class="border-t border-border/50"></div>
+
+                    <div>
+                        <h3 class="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-2">Ticket Info</h3>
+                        <p><span class="font-bold">Type:</span> Floor</p>
+                        <p><span class="font-bold">Quantity:</span> 1</p>
+                    </div>
+
+                    <div class="border-t border-border/50"></div>
+
+                    <div>
+                        <h3 class="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-2">On-Chain Data</h3>
+                        <p class="font-mono text-xs break-all"><span class="font-sans font-bold">Contract:</span> 0x1A2b3c4D5e6F7g8H9i0J1k2L3m4N5o6P7q8R9s0T</p>
+                        <p class="font-mono text-xs"><span class="font-sans font-bold">Token ID:</span> #77</p>
+                        <a href="#" class="inline-flex items-center gap-2 text-secondary hover:text-primary mt-2 text-sm font-semibold uppercase tracking-wider">
+                            <span>View on Explorer</span>
+                            <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>lucide.createIcons();</script>
+</body>
+</html>
