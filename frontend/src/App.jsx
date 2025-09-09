@@ -71,8 +71,14 @@ function App() {
             return;
         }
         setCurrentPage(page);
+        setSelectedEvent(null); // Reset selected event when navigating away
         window.scrollTo(0, 0);
     };
+
+    const handleNavigateBack = () => {
+        setCurrentPage('home');
+        setSelectedEvent(null);
+    }
 
     const handlePurchase = (seats, totalPrice) => {
         setPurchaseDetails({ event: selectedEvent, seats, totalPrice });
@@ -110,12 +116,17 @@ function App() {
 
         switch (currentPage) {
             case 'event':
-                return <EventDetailPage event={selectedEvent} onPurchase={handlePurchase} walletConnected={walletConnected}/>;
+                return <EventDetailPage 
+                            event={selectedEvent} 
+                            onPurchase={handlePurchase} 
+                            walletConnected={walletConnected}
+                            onNavigateBack={handleNavigateBack}
+                        />;
             case 'profile':
                 return <ProfilePage tickets={ownedTickets}/>;
             case 'home':
             default:
-                return <HomePage events={events} onSelectEvent={handleSelectEvent} />;
+                return <HomePage events={events} onSelectEvent={handleSelectEvent} isLoading={loading} />;
         }
     };
 

@@ -1,27 +1,21 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const TicketTypeSelector = ({ tiers, onSelectTier }) => {
+const TicketTypeSelector = ({ tiers, selectedTier, onSelectTier }) => {
   return (
-    <div className="ticket-type-selector">
-      <h3 className="text-lg font-bold mb-2">Select Ticket Type</h3>
+    <div className="grid grid-cols-3 gap-3 mb-6">
       {tiers.map((tier) => (
-        <div key={tier.typeId} className="tier-item border p-4 mb-2 rounded">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="font-semibold">{tier.name}</p>
-              <p className="text-sm text-gray-600">Price: {tier.price}</p>
-              <p className="text-sm text-gray-600">Available: {tier.quantity - tier.sold}</p>
-            </div>
-            <button
-              onClick={() => onSelectTier(tier)}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              aria-label={`Select ${tier.name}`}
-            >
-              Select
-            </button>
-          </div>
-        </div>
+        <button
+          key={tier.tierId}
+          onClick={() => onSelectTier(tier)}
+          className={`tier-btn p-3 rounded-xl text-center font-semibold uppercase transition-colors ${
+            selectedTier?.tierId === tier.tierId
+              ? 'border-2 border-primary bg-primary/20'
+              : 'border border-border hover:bg-primary/10'
+          }`}
+        >
+          <span>{tier.name}</span>
+        </button>
       ))}
     </div>
   );
@@ -30,13 +24,11 @@ const TicketTypeSelector = ({ tiers, onSelectTier }) => {
 TicketTypeSelector.propTypes = {
   tiers: PropTypes.arrayOf(
     PropTypes.shape({
-      typeId: PropTypes.number.isRequired,
+      tierId: PropTypes.number.isRequired,
       name: PropTypes.string.isRequired,
-      price: PropTypes.string.isRequired,
-      quantity: PropTypes.number.isRequired,
-      sold: PropTypes.number.isRequired,
     })
   ).isRequired,
+  selectedTier: PropTypes.object,
   onSelectTier: PropTypes.func.isRequired,
 };
 

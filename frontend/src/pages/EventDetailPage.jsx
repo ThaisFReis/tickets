@@ -1,45 +1,43 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { getEventTiers } from '../services/ethers';
+import { ArrowLeft } from 'lucide-react'; // Using lucide-react, will need to install
+import TicketTypeSelector from '../components/TicketTypeSelector';
+import QuantitySelector from '../components/QuantitySelector';
+import SeatSelectionMap from '../components/SeatSelectionMap';
+import PurchaseSummary from '../components/PurchaseSummary';
 
-const formatPrice = (priceInWeiString) => {
-    const WEI_PER_ETH = 1000000000000000000;
-    try {
-        const priceInWei = BigInt(priceInWeiString);
-        const priceInEth = Number(priceInWei) / WEI_PER_ETH;
-        return priceInEth.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
-    } catch (e) {
-        console.error("Erro ao formatar preço:", e);
-        return "0.00";
-    }
-};
-
+// Mock data for now, will be replaced with actual data fetching
 const MOCK_VENUE_LAYOUT = {
     seatedSections: [
-        { tierName: 'Arquibancada', name: 'Setor A', rows: 8, seatsPerRow: 16 },
-        { tierName: 'Arquibancada', name: 'Setor B', rows: 8, seatsPerRow: 18 },
-        { tierName: 'Camarote', name: 'Lounge VIP', rows: 4, seatsPerRow: 8, isVIP: true },
-        { tierName: 'Plateia', name: 'Fileiras A-E', rows: 5, seatsPerRow: 12 },
+        { tierName: 'Bleachers', name: 'Section A', rows: 8, seatsPerRow: 16 },
+        { tierName: 'Bleachers', name: 'Section B', rows: 8, seatsPerRow: 18 },
+        { tierName: 'VIP', name: 'VIP Lounge', rows: 4, seatsPerRow: 8, isVIP: true },
     ],
-    soldSeats: ['A-1-3', 'A-1-4', 'B-3-8', 'B-3-9', 'L-2-1', 'F-3-5']
+    soldSeats: ['A-1-3', 'A-1-4', 'B-3-8', 'B-3-9', 'V-2-1']
 };
 
-function EventDetailPage({ event, onPurchase, walletConnected }) {
+
+const EventDetailPage = ({ event, onPurchase, onNavigateBack, walletConnected }) => {
     const [ticketTiers, setTicketTiers] = useState([]);
     const [isLoadingTiers, setIsLoadingTiers] = useState(true);
     const [selectedTier, setSelectedTier] = useState(null);
     const [selectedSeats, setSelectedSeats] = useState([]);
     const [quantity, setQuantity] = useState(1);
-    const eventDate = new Date(event.date);
-    const imageURL = `https://placehold.co/800x1200/1F2937/FFFFFF?text=${encodeURIComponent(event.name)}`;
 
     useEffect(() => {
         const loadTiers = async () => {
             if (!event?.id) return;
             try {
                 setIsLoadingTiers(true);
-                const tiers = await getEventTiers(event.id);
-                setTicketTiers(tiers);
+                // This is a placeholder for fetching real tier data
+                // In the new design, we have 'Floor', 'Bleachers', 'VIP'
+                const fetchedTiers = [
+                    { tierId: 1, name: 'Floor', price: '10000000000000000', type: 'standing' },
+                    { tierId: 2, name: 'Bleachers', price: '15000000000000000', type: 'seated' },
+                    { tierId: 3, name: 'VIP', price: '30000000000000000', type: 'seated' },
+                ];
+                setTicketTiers(fetchedTiers);
+                setSelectedTier(fetchedTiers[0]); // Select 'Floor' by default
             } catch (error) {
                 console.error("Failed to fetch ticket tiers:", error);
             } finally {
@@ -54,112 +52,82 @@ function EventDetailPage({ event, onPurchase, walletConnected }) {
         setSelectedSeats([]);
         setQuantity(1);
     };
-
-    const handleSeatSelect = (seatId) => {
-        setSelectedSeats(prev => prev.includes(seatId) ? prev.filter(s => s !== seatId) : [...prev, seatId]);
-    };
-
+    
     const totalPrice = useMemo(() => {
         if (!selectedTier) return "0";
         const count = selectedTier.type === 'seated' ? selectedSeats.length : quantity;
-        return (BigInt(count) * BigInt(selectedTier.price)).toString();
+        if (count === 0) return "0";
+        const priceInWei = BigInt(selectedTier.price);
+        return (BigInt(count) * priceInWei).toString();
     }, [selectedTier, selectedSeats, quantity]);
 
-    const sectionsForTier = MOCK_VENUE_LAYOUT.seatedSections.filter(s => s.tierName === selectedTier?.name);
 
     return (
-        <div className="container mx-auto text-white">
-            <div className="lg:flex gap-12">
-                <div className="lg:w-1/3 mb-8 lg:mb-0">
-                    <img src={imageURL} alt={event.name} className="rounded-lg shadow-2xl w-full" />
-                    <div className="mt-6 bg-gray-800 p-4 rounded-lg">
-                        <h2 className="text-3xl font-bold mb-2">{event.name}</h2>
-                        <p className="text-md text-gray-400"><strong>Data:</strong> {eventDate.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' })}</p>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
+            <button 
+                onClick={onNavigateBack} 
+                className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 font-semibold uppercase text-xs tracking-widest"
+            >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Events</span>
+            </button>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+                <div className="lg:col-span-3">
+                    <img 
+                        src={event.image} 
+                        alt={event.name} 
+                        className="w-full rounded-2xl object-cover mb-6 border-2 border-border shadow-lg"
+                    />
+                    <h1 className="text-6xl font-extrabold uppercase text-glow">{event.name}</h1>
+                    <p className="text-lg text-secondary font-semibold mt-2">{event.venue}</p>
+                    <div className="mt-6 text-lg text-muted-foreground">
+                        <p>{event.description}</p>
                     </div>
                 </div>
-                <div className="lg:w-2/3">
-                    <h3 className="text-2xl font-bold mb-4">1. Escolha o tipo de ingresso</h3>
-                    {isLoadingTiers ? <p>A carregar tipos de ingresso...</p> : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                            {ticketTiers.map(tier => (
-                                <div key={tier.tierId} onClick={() => handleTierSelect(tier)}
-                                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${selectedTier?.tierId === tier.tierId ? 'border-violet-500 bg-violet-900/50' : 'border-gray-700 bg-gray-800 hover:border-violet-600'}`}>
-                                    <h4 className="font-bold text-xl">{tier.name}</h4>
-                                    <p className="text-violet-400 text-lg">{formatPrice(tier.price)} ETH</p>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                <div className="lg:col-span-2">
+                    <div className="glass-ui p-6 sticky top-28">
+                        <h2 className="text-3xl font-bold uppercase mb-6">Select Tickets</h2>
+                        
+                        {isLoadingTiers ? <p>Loading tiers...</p> : (
+                            <TicketTypeSelector
+                                tiers={ticketTiers}
+                                selectedTier={selectedTier}
+                                onSelectTier={handleTierSelect}
+                            />
+                        )}
 
-                    {selectedTier && (
-                        <div>
-                            <h3 className="text-2xl font-bold mb-4">2. Selecione seus ingressos</h3>
-                            {selectedTier.type === 'standing' ? (
-                                <div className="bg-gray-800 p-6 rounded-lg flex items-center justify-between">
-                                    <span className="text-lg">Quantidade:</span>
-                                    <div className="flex items-center gap-4">
-                                        <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="bg-gray-700 rounded-full w-10 h-10 text-2xl">-</button>
-                                        <span className="text-2xl font-bold w-12 text-center">{quantity}</span>
-                                        <button onClick={() => setQuantity(q => q + 1)} className="bg-gray-700 rounded-full w-10 h-10 text-2xl">+</button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="bg-gray-800 p-4 sm:p-6 rounded-lg overflow-x-auto">
-                                    <div className="relative h-12 w-3/4 mx-auto mb-8 bg-gradient-to-t from-violet-800 to-violet-600 rounded-t-full shadow-[0_0_20px_5px_rgba(124,58,237,0.5)]"><div className="absolute inset-x-0 bottom-0 text-center text-white font-bold text-lg">PALCO</div></div>
-                                    <div className="flex flex-col items-center gap-8">
-                                        {sectionsForTier.map(section => (
-                                            <div key={section.name} className="flex flex-col items-center gap-1.5">
-                                                <h4 className="font-semibold text-gray-300 mb-2">{section.name}</h4>
-                                                {Array.from({ length: section.rows }).map((_, rowIndex) => (
-                                                    <div key={rowIndex} className="flex justify-center gap-1.5">
-                                                        {Array.from({ length: section.seatsPerRow }).map((_, seatIndex) => {
-                                                            const seatId = `${section.name.charAt(0)}-${rowIndex + 1}-${seatIndex + 1}`;
-                                                            const isSold = MOCK_VENUE_LAYOUT.soldSeats.includes(seatId);
-                                                            const isSelected = selectedSeats.includes(seatId);
-                                                            let seatClass = `transition-colors duration-200 ${section.isVIP ? 'w-6 h-6 sm:w-7 sm:h-7 rounded-md' : 'w-4 h-4 sm:w-5 sm:h-5 rounded-t-md'}`;
-                                                            if (isSold) seatClass += " bg-gray-600 cursor-not-allowed";
-                                                            else if (isSelected) seatClass += " bg-violet-500 scale-110 shadow-lg cursor-pointer";
-                                                            else seatClass += " bg-gray-400 hover:bg-violet-400 cursor-pointer";
-                                                            return <div key={seatId} className={seatClass} onClick={() => !isSold && handleSeatSelect(seatId)}></div>
-                                                        })}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="flex justify-center gap-6 mt-8 text-sm text-gray-400">
-                                       <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-t-md bg-gray-400"></div> Disponível</div>
-                                       <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-t-md bg-violet-500"></div> Selecionado</div>
-                                       <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-t-md bg-gray-600"></div> Ocupado</div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                        {selectedTier?.type === 'standing' && (
+                            <QuantitySelector
+                                quantity={quantity}
+                                setQuantity={setQuantity}
+                            />
+                        )}
+
+                        {selectedTier?.type === 'seated' && (
+                            <SeatSelectionMap
+                                layout={MOCK_VENUE_LAYOUT}
+                                selectedSeats={selectedSeats}
+                                onSelectSeat={setSelectedSeats}
+                                tierName={selectedTier.name}
+                            />
+                        )}
+                        
+                        <PurchaseSummary
+                            totalPrice={totalPrice}
+                            onPurchase={() => onPurchase(selectedSeats, totalPrice)}
+                            walletConnected={walletConnected}
+                        />
+                    </div>
                 </div>
             </div>
-            {totalPrice !== "0" && (
-                <div className="fixed bottom-0 left-0 right-0 bg-gray-800 bg-opacity-90 backdrop-blur-sm p-4 border-t border-gray-700">
-                    <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <div className="text-center sm:text-left">
-                            <h4 className="font-bold text-lg">{selectedTier.name}</h4>
-                            <p className="text-xs text-gray-300 font-mono max-w-xs truncate">{selectedTier.type === 'seated' ? selectedSeats.join(', ') : `${quantity} Ingresso(s)`}</p>
-                        </div>
-                        <div className="text-center"><p className="text-gray-400">Total</p><p className="font-bold text-2xl text-violet-400">{formatPrice(totalPrice)} ETH</p></div>
-                        <button onClick={() => onPurchase(event, selectedTier, selectedTier.type === 'seated' ? selectedSeats : quantity, totalPrice)} disabled={!walletConnected}
-                            className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition duration-300 disabled:bg-gray-600 disabled:cursor-not-allowed">
-                            {walletConnected ? `Comprar Ingresso(s)` : 'Conecte a Carteira'}
-                        </button>
-                    </div>
-                </div>
-            )}
-        </div>
+        </main>
     );
-}
+};
 
 EventDetailPage.propTypes = {
     event: PropTypes.object.isRequired,
     onPurchase: PropTypes.func.isRequired,
+    onNavigateBack: PropTypes.func.isRequired,
     walletConnected: PropTypes.bool.isRequired,
 };
 

@@ -1,47 +1,42 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Plus, Minus } from 'lucide-react';
 
-const QuantitySelector = ({ quantity, onQuantityChange, maxQuantity }) => {
-  const handleIncrement = () => {
-    if (quantity < maxQuantity) {
-      onQuantityChange(quantity + 1);
-    }
+const QuantitySelector = ({ quantity, setQuantity }) => {
+  const handleDecrement = () => {
+    setQuantity(q => Math.max(1, q - 1));
   };
 
-  const handleDecrement = () => {
-    if (quantity > 1) {
-      onQuantityChange(quantity - 1);
-    }
+  const handleIncrement = () => {
+    // Assuming a max quantity of 10 for now
+    setQuantity(q => Math.min(10, q + 1));
   };
 
   return (
-    <div className="quantity-selector flex items-center">
-      <h3 className="text-lg font-bold mr-4">Select Quantity</h3>
-      <button
-        onClick={handleDecrement}
-        disabled={quantity <= 1}
-        className="bg-gray-300 text-black px-3 py-1 rounded disabled:opacity-50"
-        aria-label="-"
-      >
-        -
-      </button>
-      <span className="mx-4 text-lg">{quantity}</span>
-      <button
-        onClick={handleIncrement}
-        disabled={quantity >= maxQuantity}
-        className="bg-gray-300 text-black px-3 py-1 rounded disabled:opacity-50"
-        aria-label="+"
-      >
-        +
-      </button>
+    <div>
+      <label className="font-semibold mb-2 block uppercase text-sm tracking-wider">Quantity</label>
+      <div className="flex items-center gap-4">
+        <button 
+          onClick={handleDecrement}
+          className="p-3 border border-border rounded-full hover:bg-primary/20 transition-colors"
+        >
+          <Minus size={16} />
+        </button>
+        <span className="text-2xl font-bold w-8 text-center">{quantity}</span>
+        <button 
+          onClick={handleIncrement}
+          className="p-3 border border-border rounded-full hover:bg-primary/20 transition-colors"
+        >
+          <Plus size={16} />
+        </button>
+      </div>
     </div>
   );
 };
 
 QuantitySelector.propTypes = {
   quantity: PropTypes.number.isRequired,
-  onQuantityChange: PropTypes.func.isRequired,
-  maxQuantity: PropTypes.number.isRequired,
+  setQuantity: PropTypes.func.isRequired,
 };
 
 export default QuantitySelector;
