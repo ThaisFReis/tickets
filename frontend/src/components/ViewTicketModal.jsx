@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { X, ArrowUpRight } from 'lucide-react';
-import QRCode from 'qrcode.react';
+import { QRCode } from 'qrcode.react';
 
 const ViewTicketModal = ({ ticket, onClose }) => {
     if (!ticket) return null;
