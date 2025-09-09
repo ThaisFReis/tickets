@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketChain - Hybrid Style</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="theme_hybrid_glass_y2k.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+        body {
+            background-color: var(--background);
+            color: var(--foreground);
+            font-family: var(--font-sans);
+            overflow-x: hidden;
+        }
+        .gradient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(oklch(0.7 0.3 280 / 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, oklch(0.7 0.3 280 / 0.1) 1px, transparent 1px);
+            z-index: -1;
+        }
+        .shape1 {
+            position: absolute;
+            top: 5vh;
+            left: -15vw;
+            width: 45vw;
+            height: 45vw;
+            background: radial-gradient(circle, oklch(0.3 0.2 280 / 0.3), transparent 60%);
+            border-radius: 50%;
+            animation: move1 20s infinite alternate ease-in-out;
+        }
+        .shape2 {
+            position: absolute;
+            bottom: 0vh;
+            right: -20vw;
+            width: 55vw;
+            height: 55vw;
+            background: radial-gradient(circle, oklch(0.35 0.2 320 / 0.25), transparent 70%);
+            border-radius: 50%;
+            animation: move2 25s infinite alternate ease-in-out;
+        }
+        @keyframes move1 { from { transform: translate(0, 0) rotate(0deg); } to { transform: translate(25vw, 15vh) rotate(90deg); } }
+        @keyframes move2 { from { transform: translate(0, 0) rotate(0deg); } to { transform: translate(-25vw, -20vh) rotate(-90deg); } }
+
+        .glass-ui {
+            background-color: var(--card);
+            backdrop-filter: blur(16px) saturate(220%);
+            -webkit-backdrop-filter: blur(16px) saturate(220%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease-out;
+        }
+        .glass-ui:hover {
+            box-shadow: var(--shadow-lg);
+            border-color: var(--accent);
+        }
+        .y2k-btn {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            color: var(--primary-foreground);
+            border-radius: 9999px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-normal);
+            box-shadow: 0 0 20px 0 oklch(0.8 0.3 320 / 0.6);
+            transition: all 0.2s ease-out;
+        }
+        .y2k-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px 0 oklch(0.8 0.3 320 / 0.8);
+        }
+        .text-glow {
+            text-shadow: 0 0 12px oklch(1 0 0 / 0.8);
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="gradient-bg">
+        <div class="shape1"></div>
+        <div class="shape2"></div>
+    </div>
+
+    <!-- Main Navigation -->
+    <nav class="bg-transparent fixed top-0 left-0 right-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="hexagon" class="w-8 h-8 text-secondary animate-spin" style="animation-duration: 10s;"></i>
+                    <span class="text-2xl font-extrabold uppercase tracking-widest">TicketChain</span>
+                </div>
+                <div class="hidden md:flex items-center gap-4">
+                    <a href="#" class="px-4 py-2 text-sm font-semibold uppercase hover:text-secondary transition-colors">Events</a>
+                    <a href="#" class="px-4 py-2 text-sm font-semibold uppercase hover:text-secondary transition-colors">My Tickets</a>
+                    <button class="y2k-btn px-6 py-3 text-xs flex items-center gap-2">
+                        <span>Connect Wallet</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Home Screen -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-12">
+        <div class="text-center mb-16">
+            <h1 class="text-6xl md:text-8xl font-extrabold uppercase mb-4 text-glow">Enter the Concertverse</h1>
+            <p class="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">The next dimension of live events is here. Mint your access pass.</p>
+            <div class="mt-8 max-w-md mx-auto">
+                <input type="search" placeholder="Find your next experience..." class="glass-ui w-full px-5 py-3 text-center focus:ring-2 focus:ring-primary outline-none text-lg">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <div class="glass-ui"><div class="p-4"><img src="https://placehold.co/600x400/f0f0f0/333333/png?text=Synthwave" class="w-full h-48 object-cover rounded-lg mb-4"><h3 class="text-2xl font-bold uppercase">Synthwave Revival</h3><p class="text-md text-secondary font-semibold mt-1">The Grid, Neo-Kyoto</p></div></div>
+            <div class="glass-ui"><div class="p-4"><img src="https://placehold.co/600x400/f0f0f0/333333/png?text=Odyssey" class="w-full h-48 object-cover rounded-lg mb-4"><h3 class="text-2xl font-bold uppercase">Orbital Odyssey</h3><p class="text-md text-secondary font-semibold mt-1">Starlight Amphitheater</p></div></div>
+            <div class="glass-ui"><div class="p-4"><img src="https://placehold.co/600x400/f0f0f0/333333/png?text=Jazz" class="w-full h-48 object-cover rounded-lg mb-4"><h3 class="text-2xl font-bold uppercase">Jazz in the Dark</h3><p class="text-md text-secondary font-semibold mt-1">The Velvet Note</p></div></div>
+            <div class="glass-ui"><div class="p-4"><img src="https://placehold.co/600x400/f0f0f0/333333/png?text=Holografik" class="w-full h-48 object-cover rounded-lg mb-4"><h3 class="text-2xl font-bold uppercase">Holografik Beats</h3><p class="text-md text-secondary font-semibold mt-1">Sector 7G</p></div></div>
+        </div>
+    </main>
+
+    <script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { fetchAllEvents } from '../services/ethers';
-import { ethers } from 'ethers';
 import PurchaseFlow from './PurchaseFlow'; // Import the new component
 
 const ConcertList = () => {

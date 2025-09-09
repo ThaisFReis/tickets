@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketChain - Hybrid Details</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="theme_hybrid_glass_y2k.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.0.0/dist/flowbite.min.js"></script>
+    <style>
+        body { background-color: var(--background); color: var(--foreground); font-family: var(--font-sans); overflow-x: hidden; }
+        .gradient-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(120deg, oklch(0.1 0.02 250), oklch(0.15 0.05 280)); z-index: -1; }
+        .shape1 { position: absolute; top: 5vh; left: -15vw; width: 45vw; height: 45vw; background: radial-gradient(circle, oklch(0.3 0.2 280 / 0.3), transparent 60%); border-radius: 50%; animation: move1 20s infinite alternate ease-in-out; }
+        .shape2 { position: absolute; bottom: 0vh; right: -20vw; width: 55vw; height: 55vw; background: radial-gradient(circle, oklch(0.35 0.2 320 / 0.25), transparent 70%); border-radius: 50%; animation: move2 25s infinite alternate ease-in-out; }
+        @keyframes move1 { from { transform: translate(0, 0) rotate(0deg); } to { transform: translate(25vw, 15vh) rotate(90deg); } }
+        @keyframes move2 { from { transform: translate(0, 0) rotate(0deg); } to { transform: translate(-25vw, -20vh) rotate(-90deg); } }
+        .glass-ui { background-color: var(--card); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-md); }
+        .y2k-btn { background: linear-gradient(45deg, var(--primary), var(--accent)); color: var(--primary-foreground); border-radius: 9999px; font-weight: 600; text-transform: uppercase; letter-spacing: var(--tracking-normal); box-shadow: 0 0 20px 0 oklch(0.8 0.3 320 / 0.6); transition: all 0.2s ease-out; }
+        .y2k-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px 0 oklch(0.8 0.3 320 / 0.8); }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="gradient-bg"><div class="shape1"></div><div class="shape2"></div></div>
+
+    <!-- Main Navigation -->
+    <nav class="bg-transparent fixed top-0 left-0 right-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="hexagon" class="w-8 h-8 text-secondary animate-spin" style="animation-duration: 10s;"></i>
+                    <span class="text-2xl font-extrabold uppercase tracking-widest">TicketChain</span>
+                </div>
+                <div class="hidden md:flex items-center gap-4">
+                    <button class="y2k-btn px-6 py-3 text-xs flex items-center gap-2">
+                        <i data-lucide="wallet" class="w-4 h-4"></i>
+                        <span>0x1A2b...c3D4e</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Details & Booking Screen -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
+        <a href="#" class="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 font-semibold uppercase text-xs tracking-widest">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Back to Events</span>
+        </a>
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-12">
+            <div class="lg:col-span-3">
+                <img src="https://placehold.co/1200x800/f0f0f0/333333/png?text=Synthwave+Revival" alt="Event Banner" class="w-full rounded-2xl object-cover mb-6 border-2 border-border shadow-lg">
+                <h1 class="text-6xl font-extrabold uppercase text-glow">Synthwave Revival</h1>
+                <p class="text-lg text-secondary font-semibold mt-2">The Grid, Neo-Kyoto</p>
+                <div class="mt-6 text-lg text-muted-foreground">
+                    <p>Immerse yourself in the neon-drenched soundscape of the 80s with a modern twist. Synthwave Revival brings together the best artists in the genre for a night of retro-futuristic bliss. Don't miss out on this auditory journey through time.</p>
+                </div>
+            </div>
+            <div class="lg:col-span-2">
+                <div class="glass-ui p-6 sticky top-28">
+                    <h2 class="text-3xl font-bold uppercase mb-6">Select Tickets</h2>
+                    <div id="ticket-tier-selector" class="grid grid-cols-3 gap-3 mb-6">
+                        <button data-tier="floor" class="tier-btn border-2 border-primary bg-primary/20 p-3 rounded-xl text-center font-semibold uppercase"><span >Floor</span></button>
+                        <button data-tier="bleachers" class="tier-btn border border-border p-3 rounded-xl text-center font-semibold uppercase"><span>Bleachers</span></button>
+                        <button data-tier="vip" class="tier-btn border border-border p-3 rounded-xl text-center font-semibold uppercase"><span>VIP</span></button>
+                    </div>
+                    <div id="floor-selector">
+                        <label class="font-semibold mb-2 block uppercase text-sm tracking-wider">Quantity</label>
+                        <div class="flex items-center gap-4"><button class="p-3 border border-border rounded-full hover:bg-primary/20">-</button><span class="text-2xl font-bold w-8 text-center">1</span><button class="p-3 border border-border rounded-full hover:bg-primary/20">+</button></div>
+                    </div>
+                    <div id="seatmap-selector" class="hidden">
+                        <label class="font-semibold mb-2 block uppercase text-sm tracking-wider">Select Seats</label>
+                        <div class="aspect-video bg-black/20 rounded-xl flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed border-border"><div class="bg-foreground/80 text-background text-xs font-bold px-4 py-1 rounded-full mb-4">STAGE</div><p>Interactive Seat Map</p></div>
+                    </div>
+                    <div class="border-t border-border/50 my-6"></div>
+                    <div class="flex justify-between items-center mb-6"><span class="text-muted-foreground uppercase font-semibold">Total</span><span class="text-3xl font-bold text-glow">0.1 ETH</span></div>
+                    <button data-modal-target="transaction-modal" data-modal-toggle="transaction-modal" class="y2k-btn w-full py-4 font-semibold text-lg">Buy Tickets</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+        const tierButtons = document.querySelectorAll('.tier-btn');
+        const floorSelector = document.getElementById('floor-selector');
+        const seatmapSelector = document.getElementById('seatmap-selector');
+        tierButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tierButtons.forEach(btn => { btn.classList.remove('border-primary', 'bg-primary/20'); btn.classList.add('border-border'); });
+                button.classList.add('border-primary', 'bg-primary/20'); button.classList.remove('border-border');
+                const tier = button.dataset.tier;
+                floorSelector.classList.toggle('hidden', tier !== 'floor');
+                seatmapSelector.classList.toggle('hidden', tier === 'floor');
+            });
+        });
+    </script>
+</body>
+</html>

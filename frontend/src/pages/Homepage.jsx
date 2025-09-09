@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import EventCard from '../components/EventCard';
 import Button from '../components/Button';
 import { getSigner } from '../services/ethers'; // Assuming you have a connect wallet function here

@@ -1,0 +1,74 @@
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketChain - Hybrid Modal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="theme_hybrid_glass_y2k.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.0.0/dist/flowbite.min.js"></script>
+    <style>
+        body { background-color: var(--background); color: var(--foreground); font-family: var(--font-sans); overflow-x: hidden; }
+        .glass-ui { background-color: var(--card); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-md); }
+        .y2k-btn { background: linear-gradient(45deg, var(--primary), var(--accent)); color: var(--primary-foreground); border-radius: 9999px; font-weight: 600; text-transform: uppercase; letter-spacing: var(--tracking-normal); box-shadow: 0 0 20px 0 oklch(0.8 0.3 320 / 0.6); transition: all 0.2s ease-out; }
+        .y2k-btn:hover { transform: scale(1.05); }
+        .spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .modal-content { animation: scaleIn 0.3s ease-out; }
+        @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body class="antialiased">
+    <div id="transaction-modal" tabindex="-1" class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-full bg-black/60">
+        <div class="relative p-4 w-full max-w-md h-full md:h-auto">
+            <div class="relative glass-ui modal-content">
+                <!-- State 1: Confirm -->
+                <div id="modal-confirm" class="p-8 text-center">
+                    <i data-lucide="help-circle" class="mx-auto mb-4 w-16 h-16 text-muted-foreground"></i>
+                    <h3 class="mb-5 text-2xl font-bold uppercase">Confirm Purchase</h3>
+                    <p class="mb-6 text-md text-muted-foreground">You are about to purchase <strong>1x Floor Ticket</strong> for <strong>Synthwave Revival</strong> for a total of <strong>0.1 ETH</strong>.</p>
+                    <button id="confirm-purchase-btn" type="button" class="y2k-btn text-sm inline-flex items-center px-8 py-3 text-center mr-2">Confirm</button>
+                    <button data-modal-hide="transaction-modal" type="button" class="text-muted-foreground bg-transparent hover:bg-white/10 rounded-full border border-border text-sm font-medium px-8 py-3">Cancel</button>
+                </div>
+
+                <!-- State 2: Processing (hidden) -->
+                <div id="modal-processing" class="hidden p-8 text-center">
+                    <div class="spinner w-16 h-16 border-4 border-t-primary border-border rounded-full mx-auto mb-4"></div>
+                    <h3 class="mb-5 text-2xl font-bold uppercase">Processing...</h3>
+                    <p class="mb-6 text-md text-muted-foreground">Your transaction is being confirmed on the blockchain. Please wait.</p>
+                    <a href="#" class="text-primary hover:underline text-sm font-medium uppercase tracking-wider">View on Block Explorer</a>
+                </div>
+
+                <!-- State 3: Success (hidden) -->
+                <div id="modal-success" class="hidden p-8 text-center">
+                    <div class="w-16 h-16 rounded-full bg-primary/20 p-1 flex items-center justify-center mx-auto mb-4"><i data-lucide="check-circle-2" class="w-14 h-14 text-primary"></i></div>
+                    <h3 class="mb-5 text-2xl font-bold uppercase">Success!</h3>
+                    <p class="mb-6 text-md text-muted-foreground">Your tickets have been minted and are now in your wallet.</p>
+                    <a href="#" data-modal-hide="transaction-modal" class="y2k-btn text-sm inline-flex items-center px-8 py-3 text-center">View My Tickets</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        const confirmBtn = document.getElementById('confirm-purchase-btn');
+        const modalConfirm = document.getElementById('modal-confirm');
+        const modalProcessing = document.getElementById('modal-processing');
+        const modalSuccess = document.getElementById('modal-success');
+        confirmBtn.addEventListener('click', () => {
+            modalConfirm.classList.add('hidden');
+            modalProcessing.classList.remove('hidden');
+            setTimeout(() => {
+                modalProcessing.classList.add('hidden');
+                modalSuccess.classList.remove('hidden');
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

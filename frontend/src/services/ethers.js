@@ -92,6 +92,34 @@ const getEventDetails = async (eventId) => {
   }
 };
 
+const getEventTiers = async (eventId) => {
+  try {
+    const contract = await getContract();
+    const tiers = [];
+    let i = 1;
+    while (true) {
+      try {
+        const tier = await contract.getTicketTier(eventId, i);
+        tiers.push({
+          tierId: Number(tier.typeId),
+          name: tier.name,
+          price: tier.price.toString(),
+          totalQuantity: Number(tier.quantity),
+          sold: Number(tier.sold),
+          type: 'seated', // Placeholder
+        });
+        i++;
+      } catch {
+        break; // Assumes error means no more tiers
+      }
+    }
+    return tiers;
+  } catch (error) {
+    console.error("Error fetching event tiers:", error);
+    throw error;
+  }
+};
+
 const getTicketsOfOwner = async (owner) => {
   try {
     const contract = await getContract();
@@ -140,6 +168,7 @@ export {
   buyTicket,
   fetchAllEvents,
   getEventDetails,
+  getEventTiers,
   getTicketsOfOwner,
   isSeatSold,
   getOwnerOfTicket,
