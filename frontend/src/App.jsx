@@ -5,6 +5,7 @@ import EventDetailPage from './pages/EventDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import TransactionModal from './components/TransactionModal';
 import { fetchAllEvents } from './services/ethers';
+import { eventsMetadata } from './events-metadata'; // Import the metadata
 import './index.css';
 
 function App() {
@@ -25,17 +26,18 @@ function App() {
             try {
                 setLoading(true);
                 const fetchedEvents = await fetchAllEvents();
-                const eventsWithDetails = fetchedEvents.map(event => ({
-                    id: Number(event.eventId),
-                    name: event.name,
-                    date: new Date(Number(event.date) * 1000).toISOString(),
-                    image: `https://placehold.co/600x400/7C3AED/FFFFFF?text=${encodeURIComponent(event.name)}`,
-                    artist: "Various Artists", 
-                    venue: "Decentralized Arena",
-                    description: "An amazing event hosted on the blockchain.",
-                    tiers: [{ id: 1, name: 'General', price: 0.01, total: 100 }], // Placeholder tier
-                    seatingType: 'general'
-                }));
+                
+                // Merge on-chain data with off-chain metadata
+                const eventsWithDetails = fetchedEvents.map(event => {
+                    const metadata = eventsMetadata.find(m => m.name === event.name) || {};
+                    return {
+                        id: Number(event.eventId),
+                        name: event.name,
+                        date: new Date(Number(event.date) * 1000).toISOString(),
+                        ...metadata, // Add location, description, image, etc.
+                    };
+                });
+
                 setEvents(eventsWithDetails);
                 setError(null);
             } catch (err) {
@@ -89,12 +91,13 @@ function App() {
         setModalState('processing');
         // Simulate blockchain transaction
         setTimeout(() => {
-            const newTickets = purchaseDetails.seats.map((seat, index) => ({
+            const newTickets = (purchaseDetails.seats.length > 0 ? purchaseDetails.seats : [{seatId: 'Floor'}]).map((seat, index) => ({
                 tokenId: `NFT-${Date.now()}-${index}`,
                 eventId: purchaseDetails.event.id,
                 eventName: purchaseDetails.event.name,
                 eventDate: purchaseDetails.event.date,
                 eventImage: purchaseDetails.event.image,
+                venue: purchaseDetails.event.location,
                 seatId: seat.seatId,
             }));
 
@@ -111,8 +114,8 @@ function App() {
     };
     
     const renderPage = () => {
-        if (loading) return <p className="text-center text-gray-400 mt-10">Loading events...</p>;
-        if (error) return <p className="text-center text-red-500 mt-10">{error}</p>;
+        if (loading) return <div className="text-center text-lg text-muted-foreground pt-48">Loading events...</div>;
+        if (error) return <div className="text-center text-red-500 pt-48">{error}</div>;
 
         switch (currentPage) {
             case 'event':
@@ -132,6 +135,10 @@ function App() {
 
     return (
         <div className="bg-background min-h-screen">
+            <div className="gradient-bg">
+                <div className="shape1"></div>
+                <div className="shape2"></div>
+            </div>
             <Header
                 walletConnected={walletConnected}
                 userAddress={userAddress}
