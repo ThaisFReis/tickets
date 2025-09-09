@@ -1,73 +1,92 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Spinner, CheckCircleIcon, XCircleIcon } from './Icons';
+import { HelpCircle, CheckCircle2 } from 'lucide-react';
+import { ethers } from 'ethers';
 
 const TransactionModal = ({ modalState, setModalState, purchaseDetails, onConfirm }) => {
     if (modalState === 'closed') return null;
 
-    const ModalContent = () => {
+    const formatPrice = (priceInWeiString) => {
+        if (!priceInWeiString || priceInWeiString === "0") return "0.0";
+        try {
+            return ethers.formatEther(priceInWeiString);
+        } catch (e) {
+            console.error("Error formatting price:", e);
+            return "0.0";
+        }
+    };
+
+    const getPurchaseDescription = () => {
+        if (!purchaseDetails) return '';
+        const { seats, event } = purchaseDetails;
+        const quantity = seats.length > 0 ? seats.length : 1; // Assuming quantity 1 for standing
+        const ticketType = seats.length > 0 ? 'Seated Ticket(s)' : 'Floor Ticket';
+        return `You are about to purchase ${quantity}x ${ticketType} for ${event.name}`;
+    }
+
+    const renderContent = () => {
         switch (modalState) {
             case 'confirm':
                 return (
-                    <>
-                        <h3 className="text-xl font-bold text-white mb-2">Confirmar Compra</h3>
-                        <p className="text-gray-400 mb-4">Você está prestes a comprar {purchaseDetails.seats.length} ingresso(s) para o evento.</p>
-                        <div className="bg-gray-700 p-4 rounded-lg mb-4 text-left">
-                            <div className="flex justify-between mb-2">
-                                <span className="text-gray-400">Assentos:</span>
-                                <span className="font-mono text-white">{purchaseDetails.seats.map(s => s.seatId).join(', ')}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-400">Total:</span>
-                                <span className="font-bold text-violet-400">{purchaseDetails.totalPrice} ETH</span>
-                            </div>
-                        </div>
-                        <p className="text-xs text-gray-500 mb-4">Uma taxa de rede (gás) será aplicada para processar a transação na blockchain.</p>
-                        <button onClick={onConfirm} className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-                            Confirmar na Carteira
+                    <div className="p-8 text-center">
+                        <HelpCircle className="mx-auto mb-4 w-16 h-16 text-muted-foreground" />
+                        <h3 className="mb-5 text-2xl font-bold uppercase">Confirm Purchase</h3>
+                        <p className="mb-6 text-md text-muted-foreground">
+                            {getPurchaseDescription()} for a total of {formatPrice(purchaseDetails?.totalPrice)} ETH.
+                        </p>
+                        <button 
+                            onClick={onConfirm}
+                            type="button" 
+                            className="y2k-btn text-sm inline-flex items-center px-8 py-3 text-center mr-2"
+                        >
+                            Confirm
                         </button>
-                    </>
+                        <button 
+                            onClick={() => setModalState('closed')}
+                            type="button" 
+                            className="text-muted-foreground bg-transparent hover:bg-white/10 rounded-full border border-border text-sm font-medium px-8 py-3"
+                        >
+                            Cancel
+                        </button>
+                    </div>
                 );
             case 'processing':
                 return (
-                    <>
-                        <Spinner />
-                        <h3 className="text-xl font-bold text-white mt-4">A processar Transação...</h3>
-                        <p className="text-gray-400 mt-2">A aguardar confirmação da blockchain. Isto pode levar alguns instantes.</p>
-                         <a href="#" onClick={e=>e.preventDefault()} className="text-sm text-blue-400 hover:underline mt-4 block">Ver no Etherscan</a>
-                    </>
+                    <div className="p-8 text-center">
+                        <div className="spinner w-16 h-16 border-4 border-t-primary border-border rounded-full mx-auto mb-4 animate-spin"></div>
+                        <h3 className="mb-5 text-2xl font-bold uppercase">Processing...</h3>
+                        <p className="mb-6 text-md text-muted-foreground">Your transaction is being confirmed on the blockchain. Please wait.</p>
+                        <a href="#" className="text-primary hover:underline text-sm font-medium uppercase tracking-wider">View on Block Explorer</a>
+                    </div>
                 );
             case 'success':
                 return (
-                    <>
-                        <CheckCircleIcon />
-                        <h3 className="text-xl font-bold text-white mt-4">Compra Concluída!</h3>
-                        <p className="text-gray-400 mt-2">Os seus ingressos NFT foram criados e enviados para a sua carteira.</p>
-                        <button onClick={() => setModalState('closed')} className="mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-                            Fechar
+                    <div className="p-8 text-center">
+                        <div className="w-16 h-16 rounded-full bg-primary/20 p-1 flex items-center justify-center mx-auto mb-4">
+                            <CheckCircle2 className="w-14 h-14 text-primary" />
+                        </div>
+                        <h3 className="mb-5 text-2xl font-bold uppercase">Success!</h3>
+                        <p className="mb-6 text-md text-muted-foreground">Your tickets have been minted and are now in your wallet.</p>
+                        <button 
+                            onClick={() => setModalState('closed')}
+                            className="y2k-btn text-sm inline-flex items-center px-8 py-3 text-center"
+                        >
+                            View My Tickets
                         </button>
-                    </>
+                    </div>
                 );
-            case 'failed':
-                 return (
-                    <>
-                        <XCircleIcon />
-                        <h3 className="text-xl font-bold text-white mt-4">A Transação Falhou</h3>
-                        <p className="text-gray-400 mt-2">Os seus fundos não foram debitados. Por favor, tente novamente.</p>
-                         <button onClick={() => setModalState('closed')} className="mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-                            Tentar Novamente
-                        </button>
-                    </>
-                );
+            // You can add a 'failed' case here as well if needed
             default:
                 return null;
         }
     };
-    
+
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-800 rounded-lg shadow-2xl p-8 w-full max-w-md text-center">
-                <ModalContent />
+        <div className="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-full bg-black/60">
+            <div className="relative p-4 w-full max-w-md h-full md:h-auto">
+                <div className="relative glass-ui modal-content">
+                    {renderContent()}
+                </div>
             </div>
         </div>
     );
