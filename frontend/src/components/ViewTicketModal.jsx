@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { X, ArrowUpRight } from 'lucide-react';
-import QrCode from 'qrcode.react';
+import { X, ArrowUpRight, Fullscreen } from 'lucide-react';
+import {QRCodeSVG} from 'qrcode.react';
 
 const ViewTicketModal = ({ ticket, onClose }) => {
     if (!ticket) return null;
@@ -28,23 +28,22 @@ const ViewTicketModal = ({ ticket, onClose }) => {
                 {/* Modal Body */}
                 <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto">
                     {/* QR Code Section */}
-                    <div className="flex flex-col items-center justify-center bg-white/90 p-6 rounded-xl">
-                        <QrCode 
+                    <div className="flex flex-col items-center justify-center bg-secondary p-1 rounded-xl h-fit m-auto">
+                        <QRCodeSVG 
                             value={`TicketChain-NFT-${ticket.tokenId}`}
-                            size={250}
+                            size={Fullscreen}
                             bgColor={"#FFFFFF"}
                             fgColor={"#000000"}
                             level={"L"}
-                            includeMargin={false}
                             renderAs={"svg"}
-                            className="w-full max-w-[250px] rounded-lg aspect-square"
+                            className="w-full rounded-lg aspect-square"
                         />
                     </div>
 
                     {/* Info Section */}
                     <div className="flex flex-col gap-6">
                         <div>
-                            <h2 className="text-4xl lg:text-5xl font-extrabold uppercase text-glow">{ticket.eventName}</h2>
+                            <h2 className="text-4xl lg:text-5xl font-extrabold uppercase text-glow2">{ticket.eventName}</h2>
                             <p className="text-lg text-secondary font-semibold mt-1">{eventDate}</p>
                             <p className="text-md text-muted-foreground mt-1">{ticket.venue || 'Decentralized Arena'}</p>
                         </div>
