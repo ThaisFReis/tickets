@@ -4,28 +4,28 @@ import { Hexagon } from './Icons'; // Assuming you have a Hexagon icon
 
 const Header = ({ walletConnected, userAddress, onConnectWallet, onNavigate }) => {
     return (
-        <header className="bg-transparent fixed top-0 left-0 right-0 z-40">
+        <header className="bg-[#010408e1] fixed top-0 left-0 right-0 z-40 backdrop-blur-md">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-20">
                     <div 
                         className="flex items-center gap-3 cursor-pointer"
                         onClick={() => onNavigate('home')}
                     >
-                        <Hexagon className="w-8 h-8 text-secondary animate-spin" style={{ animationDuration: '10s' }} />
+                        <Hexagon className="w-8 h-8 text-primary animate-spin" style={{ animationDuration: '10s' }} />
                         <span className="text-2xl font-extrabold uppercase tracking-widest">TicketChain</span>
                     </div>
                     <div className="hidden md:flex items-center gap-4">
                         <a 
                             href="#" 
                             onClick={(e) => { e.preventDefault(); onNavigate('home'); }}
-                            className="px-4 py-2 text-sm font-semibold uppercase hover:text-secondary transition-colors"
+                            className="px-4 py-2 text-sm font-semibold uppercase hover:text-primary transition-colors"
                         >
                             Events
                         </a>
                         <a 
                             href="#" 
                             onClick={(e) => { e.preventDefault(); onNavigate('profile'); }}
-                            className="px-4 py-2 text-sm font-semibold uppercase hover:text-secondary transition-colors"
+                            className="px-4 py-2 text-sm font-semibold uppercase hover:text-primary transition-colors"
                         >
                             My Tickets
                         </a>

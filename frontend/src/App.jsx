@@ -132,10 +132,6 @@ function App() {
 
     return (
         <div className="bg-background min-h-screen">
-            <div className="gradient-bg">
-                <div className="shape1"></div>
-                <div className="shape2"></div>
-            </div>
             <Header
                 walletConnected={walletConnected}
                 userAddress={userAddress}
