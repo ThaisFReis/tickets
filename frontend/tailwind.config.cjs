@@ -7,7 +7,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: 'oklch(0.1 0.02 250)',
+        background: 'oklch(0.1 0.02 220)',
         foreground: 'oklch(0.95 0.01 250)',
         primary: 'oklch(0.7 0.3 280)',
         'primary-foreground': 'oklch(1 0 0)',
