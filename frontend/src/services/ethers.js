@@ -7,7 +7,6 @@ if (window.ethereum) {
   provider = new ethers.BrowserProvider(window.ethereum);
 } else {
   console.error("Please install MetaMask!");
-  // Fallback to a read-only provider if MetaMask is not available
   provider = new ethers.JsonRpcProvider('http://localhost:8545');
 }
 
@@ -25,7 +24,6 @@ const getContract = async (withSigner = false) => {
       const signer = await getSigner();
       return new ethers.Contract(contractAddress.address, contractAbi, signer);
     }
-    // For read-only operations, always use local provider to ensure we connect to local blockchain
     const localProvider = new ethers.JsonRpcProvider('http://localhost:8545');
     return new ethers.Contract(contractAddress.address, contractAbi, localProvider);
   } catch (error) {
@@ -34,16 +32,16 @@ const getContract = async (withSigner = false) => {
   }
 };
 
-const createEvent = async (name, date, ticketPrice, totalSupply, isAssignedSeating, totalSeats) => {
+const createEvent = async (name, date, tierNames, tierPrices, tierQuantities) => {
   try {
     const contract = await getContract(true);
+    const pricesInWei = tierPrices.map(price => ethers.parseEther(price));
     const transaction = await contract.createEvent(
       name,
       date,
-      ethers.parseEther(ticketPrice),
-      totalSupply,
-      isAssignedSeating,
-      totalSeats
+      tierNames,
+      pricesInWei,
+      tierQuantities
     );
     await transaction.wait();
   } catch (error) {
@@ -52,25 +50,34 @@ const createEvent = async (name, date, ticketPrice, totalSupply, isAssignedSeati
   }
 };
 
-const buyTicket = async (eventId, seatId) => {
-    try {
-      const contract = await getContract(true);
-      const eventDetails = await getEventDetails(eventId);
-      const ticketPrice = eventDetails.ticketPrice;
-      const transaction = await contract.buyTicket(eventId, seatId, { value: ticketPrice });
-      await transaction.wait();
-    } catch (error) {
-      console.error("Error buying ticket:", error);
-      throw error;
-    }
-  };
+const buyTicket = async (eventId, typeId, seatIds, totalPrice) => {
+  try {
+    const contract = await getContract(true);
+    const transaction = await contract.buyTicket(eventId, typeId, seatIds, { value: ethers.parseEther(totalPrice) });
+    await transaction.wait();
+  } catch (error) {
+    console.error("Error buying ticket:", error);
+    throw error;
+  }
+};
 
-const getAllEvents = async () => {
+const fetchAllEvents = async () => {
   try {
     const contract = await getContract();
-    return await contract.getAllEvents();
+    const eventCount = await contract.nextEventId();
+    const events = [];
+    for (let i = 1; i < eventCount; i++) {
+      const eventDetails = await contract.getEventDetails(i);
+      events.push({
+        eventId: BigInt(i),
+        name: eventDetails[0],
+        date: eventDetails[1],
+        organizer: eventDetails[2],
+      });
+    }
+    return events;
   } catch (error) {
-    console.error("Error getting all events:", error);
+    console.error("Error fetching all events:", error);
     throw error;
   }
 };
@@ -131,7 +138,7 @@ export {
   getContract,
   createEvent,
   buyTicket,
-  getAllEvents,
+  fetchAllEvents,
   getEventDetails,
   getTicketsOfOwner,
   isSeatSold,

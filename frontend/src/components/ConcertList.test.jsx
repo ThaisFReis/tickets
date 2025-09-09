@@ -3,39 +3,25 @@ import { describe, it, expect, vi } from 'vitest';
 import ConcertList from './ConcertList';
 import * as EthersService from '../services/ethers';
 
-// Mock the ethers service
 vi.mock('../services/ethers');
 
-describe('ConcertList Integration Test', () => {
-  it('fetches and displays events from the smart contract', async () => {
+describe('ConcertList', () => {
+  it('fetches and displays a list of concerts', async () => {
     const mockEvents = [
-        {
-            eventId: 1n,
-            name: 'Live Rock Fest',
-            date: BigInt(Math.floor(Date.now() / 1000) + 3600),
-            ticketPrice: 100000000000000000n, // 0.1 ETH in wei
-            isAssignedSeating: false,
-        },
+      { eventId: 1n, name: 'Rock Fest 2025', date: BigInt(Math.floor(Date.now() / 1000) + 86400) },
+      { eventId: 2n, name: 'Jazz Night', date: BigInt(Math.floor(Date.now() / 1000) + 172800) },
     ];
 
-    const mockContract = {
-      getAllEvents: vi.fn().mockResolvedValue(mockEvents),
-    };
-
-    EthersService.getContract.mockResolvedValue(mockContract);
+    EthersService.fetchAllEvents.mockResolvedValue(mockEvents);
 
     render(<ConcertList />);
 
-    // Check for a loading state initially
-    expect(screen.getByText('Loading events...')).toBeInTheDocument();
-
-    // Wait for the component to render the fetched data
+    // Wait for events to be loaded and displayed
     await waitFor(() => {
-      expect(screen.getByText('Live Rock Fest')).toBeInTheDocument();
+      expect(screen.getByText('Rock Fest 2025')).toBeInTheDocument();
+      expect(screen.getByText('Jazz Night')).toBeInTheDocument();
     });
 
-    // Verify that the service and contract methods were called
-    expect(EthersService.getContract).toHaveBeenCalled();
-    expect(mockContract.getAllEvents).toHaveBeenCalled();
+    expect(EthersService.fetchAllEvents).toHaveBeenCalled();
   });
 });

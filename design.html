@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketChain - Mercado Descentralizado de Ingressos</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel para transpilar JSX no navegador -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Adiciona a fonte Inter do Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Importações do React (já disponíveis globalmente pelos scripts)
+        const { useState, useEffect, useMemo } = React;
+
+        // MOCK DATA (Dados Fictícios)
+        const MOCK_EVENTS = [
+          {
+            id: 1,
+            name: "Concerto Acústico: A Voz da Alma",
+            artist: "Mariana Almeida",
+            date: "2025-10-26T20:00:00",
+            venue: "Teatro Municipal, Rio de Janeiro",
+            image: "https://placehold.co/600x400/7C3AED/FFFFFF?text=Concerto+Acústico",
+            description: "Uma noite inesquecível com os maiores sucessos de Mariana Almeida em formato acústico. Uma experiência íntima e emocionante.",
+            tiers: [
+              { id: 1, name: 'Pista', price: 0.05, total: 100 },
+              { id:2, name: 'Cadeira Superior', price: 0.08, total: 200 },
+              { id: 3, name: 'Camarote', price: 0.15, total: 50 },
+            ],
+            seatingType: 'assigned'
+          },
+          {
+            id: 2,
+            name: "Festival Eletrônico 'Synthwave'",
+            artist: "DJs Internacionais",
+            date: "2025-11-15T22:00:00",
+            venue: "Marina da Glória, Rio de Janeiro",
+            image: "https://placehold.co/600x400/111827/FFFFFF?text=Festival+Synthwave",
+            description: "O maior festival de música eletrônica do ano. Luzes, som e energia em uma noite que vai ficar para a história.",
+            tiers: [
+              { id: 1, name: 'Pista Comum', price: 0.08, total: 1000 },
+              { id: 2, name: 'Pista Premium', price: 0.12, total: 500 },
+            ],
+            seatingType: 'general'
+          },
+          {
+            id: 3,
+            name: "Noite do Rock Clássico",
+            artist: "Banda Legado do Rock",
+            date: "2024-08-20T21:00:00",
+            venue: "Circo Voador, Rio de Janeiro",
+            image: "https://placehold.co/600x400/EF4444/FFFFFF?text=Noite+do+Rock",
+            description: "Reviva os maiores hinos do rock em uma performance eletrizante da banda Legado do Rock.",
+             tiers: [
+              { id: 1, name: 'Entrada Geral', price: 0.04, total: 500 },
+            ],
+            seatingType: 'general'
+          },
+        ];
+
+        const MOCK_VENUE_LAYOUT = {
+            eventId: 1,
+            sections: [
+                { name: 'Bloco A', rows: 5, seatsPerRow: 10, tierId: 2 },
+                { name: 'Bloco B', rows: 5, seatsPerRow: 10, tierId: 2 },
+                { name: 'Camarote', rows: 2, seatsPerRow: 10, tierId: 3 },
+            ],
+            soldSeats: ['A-1-3', 'A-1-4', 'B-3-8', 'B-3-9', 'C-1-5']
+        };
+
+        // ÍCONES SVG
+        const WalletIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+        );
+
+        const CheckCircleIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        );
+
+        const XCircleIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-red-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        );
+
+        const Spinner = () => (
+            <svg className="animate-spin h-12 w-12 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        );
+
+        // COMPONENTES DA UI
+        function Header({ walletConnected, userAddress, onConnectWallet, onNavigate }) {
+            return (
+                <header className="bg-gray-800 bg-opacity-50 backdrop-blur-md p-4 sticky top-0 z-50">
+                    <div className="container mx-auto flex justify-between items-center text-white">
+                        <h1 className="text-2xl font-bold text-violet-400 cursor-pointer" onClick={() => onNavigate('home')}>TicketChain</h1>
+                        <nav className="hidden md:flex items-center space-x-6">
+                            <a href="#" className="hover:text-violet-400" onClick={(e) => { e.preventDefault(); onNavigate('home'); }}>Eventos</a>
+                            <a href="#" className="hover:text-violet-400" onClick={(e) => { e.preventDefault(); onNavigate('profile'); }}>Meus Ingressos</a>
+                        </nav>
+                        <button
+                            onClick={onConnectWallet}
+                            className="flex items-center bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+                        >
+                            <WalletIcon />
+                            {walletConnected ? `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}` : 'Conectar Carteira'}
+                        </button>
+                    </div>
+                </header>
+            );
+        }
+
+        function EventCard({ event, onSelectEvent }) {
+            const eventDate = new Date(event.date);
+            const isPast = eventDate < new Date();
+
+            return (
+                <div 
+                    className={`bg-gray-800 rounded-lg overflow-hidden shadow-lg transform hover:-translate-y-2 transition-transform duration-300 cursor-pointer ${isPast ? 'opacity-50' : ''}`}
+                    onClick={() => !isPast && onSelectEvent(event)}
+                >
+                    <img className="w-full h-48 object-cover" src={event.image} alt={event.name} />
+                    <div className="p-6">
+                        <h3 className="text-xl font-bold text-white mb-2">{event.name}</h3>
+                        <p className="text-gray-400 text-sm mb-1">{event.artist}</p>
+                        <p className="text-gray-400 text-sm mb-4">{new Date(event.date).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                        <div className="flex justify-between items-center">
+                            <span className="text-violet-400 font-bold">A partir de {event.tiers[0].price} ETH</span>
+                             {isPast && <span className="text-red-500 font-bold text-sm">EVENTO ENCERRADO</span>}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function HomePage({ onSelectEvent }) {
+            return (
+                <div className="container mx-auto px-4 py-8">
+                    <h2 className="text-4xl font-bold text-white text-center mb-10">Próximos Eventos</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {MOCK_EVENTS.map(event => (
+                            <EventCard key={event.id} event={event} onSelectEvent={onSelectEvent} />
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+        
+        function VenueMap({ layout, soldSeats, selectedSeats, onSeatSelect, tiers }) {
+            const getTierForSeat = (sectionTierId) => tiers.find(t => t.id === sectionTierId);
+            
+            return (
+                <div className="bg-gray-800 p-6 rounded-lg">
+                    <div className="bg-gray-900 text-white text-center py-2 rounded-t-lg mb-4 font-bold">PALCO</div>
+                    <div className="space-y-4">
+                        {layout.sections.map((section, sectionIndex) => (
+                            <div key={section.name}>
+                                <h4 className="text-center text-violet-400 font-semibold mb-2">{section.name} ({getTierForSeat(section.tierId).name})</h4>
+                                <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${section.seatsPerRow}, 1fr)` }}>
+                                    {Array.from({ length: section.rows * section.seatsPerRow }).map((_, i) => {
+                                        const row = Math.floor(i / section.seatsPerRow) + 1;
+                                        const seatNum = (i % section.seatsPerRow) + 1;
+                                        const seatId = `${section.name.charAt(0)}-${row}-${seatNum}`;
+                                        const isSold = soldSeats.includes(seatId);
+                                        const isSelected = selectedSeats.some(s => s.seatId === seatId);
+
+                                        let seatClass = "w-full h-8 rounded-md cursor-pointer transition-colors duration-200 flex items-center justify-center text-xs font-bold ";
+                                        if (isSold) {
+                                            seatClass += "bg-gray-700 cursor-not-allowed text-gray-500";
+                                        } else if (isSelected) {
+                                            seatClass += "bg-violet-600 text-white";
+                                        } else {
+                                            seatClass += "bg-gray-600 hover:bg-violet-500 text-gray-300";
+                                        }
+
+                                        return (
+                                            <div key={seatId} className={seatClass} onClick={() => !isSold && onSeatSelect({ seatId, price: getTierForSeat(section.tierId).price, tierId: section.tierId })}>
+                                                {seatNum}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        function EventDetailPage({ event, onPurchase, walletConnected }) {
+            const [selectedSeats, setSelectedSeats] = useState([]);
+
+            const handleSeatSelect = (seat) => {
+                setSelectedSeats(prev =>
+                    prev.some(s => s.seatId === seat.seatId)
+                        ? prev.filter(s => s.seatId !== seat.seatId)
+                        : [...prev, seat]
+                );
+            };
+
+            const totalPrice = useMemo(() => {
+                return selectedSeats.reduce((total, seat) => total + seat.price, 0).toFixed(4);
+            }, [selectedSeats]);
+
+            return (
+                <div className="container mx-auto px-4 py-8 text-white">
+                    <div className="lg:flex gap-8">
+                        <div className="lg:w-1/3 mb-8 lg:mb-0">
+                            <img src={event.image.replace('?text=', `?w=800&h=1200&text=`)} alt={event.name} className="rounded-lg shadow-2xl w-full" />
+                        </div>
+                        <div className="lg:w-2/3">
+                            <h2 className="text-4xl lg:text-5xl font-bold mb-2">{event.name}</h2>
+                            <p className="text-xl text-gray-300 mb-4">{event.artist}</p>
+                            <div className="text-lg text-gray-400 mb-6 space-y-2">
+                                <p><strong>Data:</strong> {new Date(event.date).toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' })}</p>
+                                <p><strong>Local:</strong> {event.venue}</p>
+                            </div>
+                            <p className="text-gray-300 mb-8">{event.description}</p>
+                            
+                            {event.seatingType === 'assigned' ? (
+                                 <VenueMap
+                                     layout={MOCK_VENUE_LAYOUT}
+                                     soldSeats={MOCK_VENUE_LAYOUT.soldSeats}
+                                     selectedSeats={selectedSeats}
+                                     onSeatSelect={handleSeatSelect}
+                                     tiers={event.tiers}
+                                 />
+                            ) : (
+                                <div className="bg-gray-800 p-6 rounded-lg">
+                                    <h3 className="text-2xl font-bold mb-4">Ingressos</h3>
+                                     {event.tiers.map(tier => (
+                                        <div key={tier.id} className="flex justify-between items-center bg-gray-700 p-4 rounded-md mb-2">
+                                             <div>
+                                                <p className="font-bold">{tier.name}</p>
+                                                <p className="text-sm text-gray-400">{tier.total} disponíveis</p>
+                                             </div>
+                                             <span className="font-bold text-violet-400">{tier.price} ETH</span>
+                                         </div>
+                                    ))}
+                                    <p className="text-center mt-4 text-gray-400">Para eventos de entrada geral, a compra é simplificada.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    
+                    {selectedSeats.length > 0 && (
+                        <div className="fixed bottom-0 left-0 right-0 bg-gray-800 bg-opacity-90 backdrop-blur-sm p-4 border-t border-gray-700">
+                            <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
+                                <div>
+                                    <h4 className="font-bold text-lg">Assentos Selecionados:</h4>
+                                    <p className="text-sm text-gray-300">{selectedSeats.map(s => s.seatId).join(', ')}</p>
+                                </div>
+                                <div className="text-center my-2 sm:my-0">
+                                    <p className="text-gray-400">Total</p>
+                                    <p className="font-bold text-2xl text-violet-400">{totalPrice} ETH</p>
+                                </div>
+                                <button 
+                                    onClick={() => onPurchase(selectedSeats, totalPrice)}
+                                    disabled={!walletConnected}
+                                    className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition duration-300 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                >
+                                    {walletConnected ? `Comprar ${selectedSeats.length} Ingresso(s)` : 'Conecte a Carteira'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function ProfilePage({ tickets }) {
+            const now = new Date();
+            const upcomingTickets = tickets.filter(t => new Date(t.eventDate) >= now);
+            const pastTickets = tickets.filter(t => new Date(t.eventDate) < now);
+
+            const TicketCard = ({ ticket, isPast }) => (
+                <div className={`bg-gray-800 rounded-lg overflow-hidden shadow-lg flex ${isPast ? 'filter grayscale' : ''}`}>
+                    <img src={ticket.eventImage} alt={ticket.eventName} className="w-1/3 object-cover" />
+                    <div className="p-4 flex flex-col justify-between">
+                        <div>
+                            <h4 className="font-bold text-lg">{ticket.eventName}</h4>
+                            <p className="text-sm text-gray-400">{new Date(ticket.eventDate).toLocaleDateString('pt-BR')}</p>
+                        </div>
+                        <div>
+                            <p className="text-violet-400 font-bold">{ticket.seatId}</p>
+                            <a 
+                              href="#" 
+                              onClick={e => e.preventDefault()}
+                              className="text-xs text-blue-400 hover:underline mt-1 block"
+                            >
+                              Ver no Etherscan
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            );
+            
+            return (
+                <div className="container mx-auto px-4 py-8 text-white">
+                    <h2 className="text-4xl font-bold mb-8">Meus Ingressos NFT</h2>
+
+                    <div>
+                        <h3 className="text-2xl font-semibold mb-4 border-b-2 border-violet-500 pb-2">Próximos Eventos</h3>
+                        {upcomingTickets.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {upcomingTickets.map(t => <TicketCard key={t.tokenId} ticket={t} isPast={false} />)}
+                            </div>
+                        ) : <p className="text-gray-400">Você não possui ingressos para eventos futuros.</p>}
+                    </div>
+
+                    <div className="mt-12">
+                        <h3 className="text-2xl font-semibold mb-4 border-b-2 border-violet-500 pb-2">Eventos Passados</h3>
+                         {pastTickets.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {pastTickets.map(t => <TicketCard key={t.tokenId} ticket={t} isPast={true} />)}
+                            </div>
+                        ) : <p className="text-gray-400">Você não possui ingressos para eventos passados.</p>}
+                    </div>
+                </div>
+            );
+        }
+        
+        function TransactionModal({ modalState, setModalState, purchaseDetails, onConfirm }) {
+            if (modalState === 'closed') return null;
+
+            const ModalContent = () => {
+                switch (modalState) {
+                    case 'confirm':
+                        return (
+                            <>
+                                <h3 className="text-xl font-bold text-white mb-2">Confirmar Compra</h3>
+                                <p className="text-gray-400 mb-4">Você está prestes a comprar {purchaseDetails.seats.length} ingresso(s) para o evento.</p>
+                                <div className="bg-gray-700 p-4 rounded-lg mb-4 text-left">
+                                    <div className="flex justify-between mb-2">
+                                        <span className="text-gray-400">Assentos:</span>
+                                        <span className="font-mono text-white">{purchaseDetails.seats.map(s => s.seatId).join(', ')}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-400">Total:</span>
+                                        <span className="font-bold text-violet-400">{purchaseDetails.totalPrice} ETH</span>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-gray-500 mb-4">Uma taxa de rede (gás) será aplicada para processar a transação na blockchain.</p>
+                                <button onClick={onConfirm} className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                                    Confirmar na Carteira
+                                </button>
+                            </>
+                        );
+                    case 'processing':
+                        return (
+                            <>
+                                <Spinner />
+                                <h3 className="text-xl font-bold text-white mt-4">A processar Transação...</h3>
+                                <p className="text-gray-400 mt-2">A aguardar confirmação da blockchain. Isto pode levar alguns instantes.</p>
+                                 <a href="#" onClick={e=>e.preventDefault()} className="text-sm text-blue-400 hover:underline mt-4 block">Ver no Etherscan</a>
+                            </>
+                        );
+                    case 'success':
+                        return (
+                            <>
+                                <CheckCircleIcon />
+                                <h3 className="text-xl font-bold text-white mt-4">Compra Concluída!</h3>
+                                <p className="text-gray-400 mt-2">Os seus ingressos NFT foram criados e enviados para a sua carteira.</p>
+                                <button onClick={() => setModalState('closed')} className="mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                                    Fechar
+                                </button>
+                            </>
+                        );
+                    case 'failed':
+                         return (
+                            <>
+                                <XCircleIcon />
+                                <h3 className="text-xl font-bold text-white mt-4">A Transação Falhou</h3>
+                                <p className="text-gray-400 mt-2">Os seus fundos não foram debitados. Por favor, tente novamente.</p>
+                                 <button onClick={() => setModalState('closed')} className="mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                                    Tentar Novamente
+                                </button>
+                            </>
+                        );
+                    default:
+                        return null;
+                }
+            };
+            
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+                    <div className="bg-gray-800 rounded-lg shadow-2xl p-8 w-full max-w-md text-center">
+                        <ModalContent />
+                    </div>
+                </div>
+            );
+        }
+
+        // COMPONENTE PRINCIPAL DA APLICAÇÃO
+        function App() {
+            const [currentPage, setCurrentPage] = useState('home');
+            const [selectedEvent, setSelectedEvent] = useState(null);
+            const [walletConnected, setWalletConnected] = useState(false);
+            const [userAddress, setUserAddress] = useState('');
+            const [ownedTickets, setOwnedTickets] = useState([]);
+            
+            const [modalState, setModalState] = useState('closed');
+            const [purchaseDetails, setPurchaseDetails] = useState(null);
+
+            const handleConnectWallet = () => {
+                if (walletConnected) {
+                    setWalletConnected(false);
+                    setUserAddress('');
+                } else {
+                    setWalletConnected(true);
+                    setUserAddress('0x1a2b...c3d4');
+                }
+            };
+            
+            const handleSelectEvent = (event) => {
+                setSelectedEvent(event);
+                setCurrentPage('event');
+                window.scrollTo(0, 0);
+            };
+            
+            const handleNavigate = (page) => {
+                if (page === 'profile' && !walletConnected) {
+                    alert('Por favor, conecte a sua carteira para ver os seus ingressos.');
+                    return;
+                }
+                setCurrentPage(page);
+                window.scrollTo(0, 0);
+            };
+
+            const handlePurchase = (seats, totalPrice) => {
+                setPurchaseDetails({ event: selectedEvent, seats, totalPrice });
+                setModalState('confirm');
+            };
+
+            const handleConfirmPurchase = () => {
+                setModalState('processing');
+                setTimeout(() => {
+                    const newTickets = purchaseDetails.seats.map((seat, index) => ({
+                        tokenId: `NFT-${Date.now()}-${index}`,
+                        eventId: purchaseDetails.event.id,
+                        eventName: purchaseDetails.event.name,
+                        eventDate: purchaseDetails.event.date,
+                        eventImage: purchaseDetails.event.image,
+                        seatId: seat.seatId,
+                    }));
+
+                    setOwnedTickets(prev => [...prev, ...newTickets]);
+                    setModalState('success');
+                    
+                    setTimeout(() => {
+                        setModalState('closed');
+                        setCurrentPage('profile');
+                        window.scrollTo(0, 0);
+                    }, 3000);
+                }, 3000);
+            };
+            
+            const renderPage = () => {
+                switch (currentPage) {
+                    case 'event':
+                        return <EventDetailPage event={selectedEvent} onPurchase={handlePurchase} walletConnected={walletConnected}/>;
+                    case 'profile':
+                        return <ProfilePage tickets={ownedTickets}/>;
+                    case 'home':
+                    default:
+                        return <HomePage onSelectEvent={handleSelectEvent} />;
+                }
+            };
+
+            return (
+                <div>
+                    <Header
+                        walletConnected={walletConnected}
+                        userAddress={userAddress}
+                        onConnectWallet={handleConnectWallet}
+                        onNavigate={handleNavigate}
+                    />
+                    <main>
+                        {renderPage()}
+                    </main>
+                    <TransactionModal 
+                        modalState={modalState}
+                        setModalState={setModalState}
+                        purchaseDetails={purchaseDetails}
+                        onConfirm={handleConfirmPurchase}
+                    />
+                </div>
+            );
+        }
+
+        // Renderiza a aplicação na div #root
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+
+    </script>
+</body>
+</html>

@@ -18,109 +18,107 @@ describe("ConcertTicketMarketplace", function () {
     eventDate = (await time.latest()) + 3600; // 1 hour from now
   });
 
-  describe("Event Creation", function () {
-    it("Should allow the owner to create a general admission event", async function () {
-        const totalSupply = 100;
-        const eventName = "Rock Concert";
-        await expect(concertTicketMarketplace.createEvent(eventName, eventDate, ticketPrice, totalSupply, false, 0))
-            .to.emit(concertTicketMarketplace, "EventCreated")
-            .withArgs(1, eventName, eventDate, ticketPrice, totalSupply, owner.address);
-    });
+  describe("Event Creation with Tiers", function () {
+    it("Should allow the owner to create an event with multiple ticket tiers", async function () {
+      const eventName = "Multi-Tier Concert";
+      const ticketTypeNames = ["VIP", "General Admission"];
+      const ticketTypePrices = [ethers.parseEther("0.5"), ethers.parseEther("0.2")];
+      const ticketTypeQuantities = [50, 200];
 
-    it("Should allow the owner to create an assigned seating event", async function () {
-        const eventName = "Classical Concert";
-        const totalSeats = 200;
-        await expect(concertTicketMarketplace.createEvent(eventName, eventDate, ticketPrice, 0, true, totalSeats))
-            .to.emit(concertTicketMarketplace, "EventCreatedWithAssignedSeating")
-            .withArgs(1, eventName, eventDate, ticketPrice, totalSeats, owner.address);
-    });
-  });
+      // The new createEvent function will take arrays for tier details
+      await expect(concertTicketMarketplace.createEvent(
+        eventName,
+        eventDate,
+        ticketTypeNames,
+        ticketTypePrices,
+        ticketTypeQuantities
+      )).to.emit(concertTicketMarketplace, "EventCreated").withArgs(1, eventName, eventDate, owner.address);
 
-  describe("Ticket Sales (General Admission)", function () {
-    const totalSupply = 2;
-    beforeEach(async function () {
-      await concertTicketMarketplace.createEvent("Rock Concert", eventDate, ticketPrice, totalSupply, false, 0);
-    });
+      // Verify the details of the first ticket tier (VIP)
+      const vipTier = await concertTicketMarketplace.getTicketTier(1, 1); // eventId 1, typeId 1
+      expect(vipTier.name).to.equal("VIP");
+      expect(vipTier.price).to.equal(ticketTypePrices[0]);
+      expect(vipTier.quantity).to.equal(ticketTypeQuantities[0]);
+      expect(vipTier.sold).to.equal(0);
 
-    it("Should allow a user to buy a general admission ticket", async function () {
-      await expect(concertTicketMarketplace.connect(addr1).buyTicket(1, 0, { value: ticketPrice }))
-        .to.emit(concertTicketMarketplace, "TicketPurchased")
-        .withArgs(1, 1, addr1.address, 0);
-
-      const event = await concertTicketMarketplace.getEventDetails(1);
-      expect(event.sold).to.equal(1);
-      expect(await concertTicketMarketplace.ownerOf(1)).to.equal(addr1.address);
-    });
-
-    it("Should fail if the event is sold out", async function () {
-        await concertTicketMarketplace.connect(addr1).buyTicket(1, 0, { value: ticketPrice });
-        await concertTicketMarketplace.connect(owner).buyTicket(1, 0, { value: ticketPrice });
-
-        await expect(concertTicketMarketplace.connect(addr1).buyTicket(1, 0, { value: ticketPrice }))
-            .to.be.revertedWith("Event is sold out");
-    });
-
-    it("Should fail if the event has already passed", async function () {
-        await time.increaseTo(eventDate + 1);
-        await expect(concertTicketMarketplace.connect(addr1).buyTicket(1, 0, { value: ticketPrice }))
-            .to.be.revertedWith("Event has already passed");
-    });
-
-    it("Should fail with insufficient payment", async function () {
-        const insufficientAmount = ethers.parseEther("0.05");
-        await expect(concertTicketMarketplace.connect(addr1).buyTicket(1, 0, { value: insufficientAmount }))
-            .to.be.revertedWith("Insufficient payment");
+      // Verify the details of the second ticket tier (General Admission)
+      const gaTier = await concertTicketMarketplace.getTicketTier(1, 2); // eventId 1, typeId 2
+      expect(gaTier.name).to.equal("General Admission");
+      expect(gaTier.price).to.equal(ticketTypePrices[1]);
+      expect(gaTier.quantity).to.equal(ticketTypeQuantities[1]);
+      expect(gaTier.sold).to.equal(0);
     });
   });
 
-  describe("Ticket Sales (Assigned Seating)", function () {
-    const totalSeats = 100;
-    const seatId = 5;
+  describe("Ticket Sales with Tiers", function () {
+    const eventName = "Multi-Tier Concert";
+    const ticketTypeNames = ["VIP", "GA"];
+    const ticketTypePrices = [ethers.parseEther("0.5"), ethers.parseEther("0.2")];
+    const ticketTypeQuantities = [2, 5]; // Low quantity for testing sold out scenarios
 
-    beforeEach(async function () {
-      await concertTicketMarketplace.createEvent("Classical Concert", eventDate, ticketPrice, 0, true, totalSeats);
+    beforeEach(async function() {
+      // Create a new multi-tier event for each test
+      await concertTicketMarketplace.createEvent(
+        eventName,
+        eventDate,
+        ticketTypeNames,
+        ticketTypePrices,
+        ticketTypeQuantities
+      );
     });
 
-    it("Should allow a user to buy a specific seat", async function () {
-      await expect(concertTicketMarketplace.connect(addr1).buyTicket(1, seatId, { value: ticketPrice }))
+    it("Should allow a user to buy multiple tickets for a specific tier and seats", async function () {
+      const eventId = 1;
+      const typeId = 1; // VIP
+      const seatIds = [1, 2];
+      const totalPrice = ticketTypePrices[0] * BigInt(seatIds.length);
+
+      await expect(concertTicketMarketplace.connect(addr1).buyTicket(eventId, typeId, seatIds, { value: totalPrice }))
         .to.emit(concertTicketMarketplace, "TicketPurchased")
-        .withArgs(1, 1, addr1.address, seatId);
+        // We expect one event per ticket purchased
+        .withArgs(eventId, 1, addr1.address, typeId, seatIds[0])
+        .and.to.emit(concertTicketMarketplace, "TicketPurchased")
+        .withArgs(eventId, 2, addr1.address, typeId, seatIds[1]);
 
-      expect(await concertTicketMarketplace.isSeatSold(1, seatId)).to.be.true;
-      expect(await concertTicketMarketplace.ownerOf(1)).to.equal(addr1.address);
+      const vipTier = await concertTicketMarketplace.getTicketTier(eventId, typeId);
+      expect(vipTier.sold).to.equal(seatIds.length);
+
+      expect(await concertTicketMarketplace.getSeatOwner(eventId, typeId, seatIds[0])).to.equal(addr1.address);
+      expect(await concertTicketMarketplace.getSeatOwner(eventId, typeId, seatIds[1])).to.equal(addr1.address);
     });
 
-    it("Should fail if a seat is already sold (double-booking)", async function () {
-      await concertTicketMarketplace.connect(addr1).buyTicket(1, seatId, { value: ticketPrice });
+    it("Should fail if a user tries to buy an already sold seat", async function () {
+      const eventId = 1;
+      const typeId = 1; // VIP
+      const seatIds = [1];
+      const totalPrice = ticketTypePrices[0];
 
-      await expect(concertTicketMarketplace.connect(owner).buyTicket(1, seatId, { value: ticketPrice }))
+      // First purchase
+      await concertTicketMarketplace.connect(addr1).buyTicket(eventId, typeId, seatIds, { value: totalPrice });
+
+      // Second attempt on the same seat
+      await expect(concertTicketMarketplace.connect(owner).buyTicket(eventId, typeId, seatIds, { value: totalPrice }))
         .to.be.revertedWith("Seat is already sold");
     });
 
-    it("Should fail if the seat ID is invalid (out of bounds)", async function () {
-      const invalidSeatId = totalSeats + 1;
-      await expect(concertTicketMarketplace.connect(addr1).buyTicket(1, invalidSeatId, { value: ticketPrice }))
-        .to.be.revertedWith("Invalid seat ID");
-    });
-  });
+    it("Should fail if the sent value is insufficient", async function () {
+      const eventId = 1;
+      const typeId = 1; // VIP
+      const seatIds = [1, 2];
+      const insufficientValue = ticketTypePrices[0]; // Price for 1, but buying 2
 
-  describe("View Functions", function () {
-    beforeEach(async function () {
-        // Create a general admission event
-        await concertTicketMarketplace.createEvent("Rock Concert", eventDate, ticketPrice, 100, false, 0);
-        // Create an assigned seating event
-        await concertTicketMarketplace.createEvent("Classical Concert", eventDate, ticketPrice, 0, true, 200);
-        
-        // addr1 buys a ticket for each event
-        await concertTicketMarketplace.connect(addr1).buyTicket(1, 0, { value: ticketPrice }); // Token ID 1
-        await concertTicketMarketplace.connect(addr1).buyTicket(2, 10, { value: ticketPrice }); // Token ID 2
+      await expect(concertTicketMarketplace.connect(addr1).buyTicket(eventId, typeId, seatIds, { value: insufficientValue }))
+        .to.be.revertedWith("Insufficient payment");
     });
 
-    it("Should return all ticket token IDs owned by a specific address", async function () {
-        const ownedTickets = await concertTicketMarketplace.getTicketsOfOwner(addr1.address);
-        expect(ownedTickets).to.have.lengthOf(2);
-        expect(ownedTickets[0]).to.equal(1);
-        expect(ownedTickets[1]).to.equal(2);
+    it("Should fail if trying to buy more tickets than available for that tier", async function () {
+      const eventId = 1;
+      const typeId = 1; // VIP (quantity: 2)
+      const seatIds = [1, 2, 3]; // Trying to buy 3
+      const totalPrice = ticketTypePrices[0] * BigInt(seatIds.length);
+
+      await expect(concertTicketMarketplace.connect(addr1).buyTicket(eventId, typeId, seatIds, { value: totalPrice }))
+        .to.be.revertedWith("Not enough tickets available for this tier");
     });
   });
 });

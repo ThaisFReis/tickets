@@ -1,0 +1,41 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Spotlight Theme Snapshot Test > renders the application with the new Spotlight theme 1`] = `
+<DocumentFragment>
+  <div
+    class="App bg-gray-900 text-white min-h-screen p-8"
+  >
+    <header
+      class="App-header mb-8"
+    >
+      <h1
+        class="text-4xl font-bold"
+      >
+        Concert Ticket Marketplace
+      </h1>
+      <nav
+        class="mt-4"
+      >
+        <a
+          class="mr-4 text-lg hover:text-blue-400"
+          href="#"
+        >
+          Home
+        </a>
+        <a
+          class="text-lg hover:text-blue-400"
+          href="#"
+          role="link"
+        >
+          My Tickets
+        </a>
+      </nav>
+    </header>
+    <main>
+      <div>
+        Loading events...
+      </div>
+    </main>
+  </div>
+</DocumentFragment>
+`;
