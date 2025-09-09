@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
-import HomePage from './pages/HomePage';
+import HomePage from '../pages/HomePage';
 import EventDetailPage from './pages/EventDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import TransactionModal from './components/TransactionModal';
