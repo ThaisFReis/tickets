@@ -3,15 +3,15 @@
 @tailwind utilities;
 
 body {
-  @apply bg-background-main text-text-main font-sans;
+  @apply bg-background text-foreground font-sans;
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary text-text-main font-semibold py-2 px-4 rounded-lg hover:bg-opacity-80 transition-colors disabled:opacity-50;
+    @apply bg-primary text-primary-foreground font-semibold py-2 px-4 rounded-lg hover:bg-opacity-80 transition-colors disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply bg-transparent border border-primary text-primary font-semibold py-2 px-4 rounded-lg hover:bg-primary hover:text-text-main transition-colors disabled:opacity-50;
+    @apply bg-transparent border border-primary text-primary font-semibold py-2 px-4 rounded-lg hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-50;
   }
 }
