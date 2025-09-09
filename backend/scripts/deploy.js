@@ -2,6 +2,132 @@ const { ethers } = require("hardhat");
 const fs = require("fs");
 const path = require("path");
 
+// --- 1. Define Event Categories ---
+const eventCategories = {
+  show: ["Rock", "Pop", "Indie", "Electronic", "Jazz", "Symphony", "Reggae", "Metal"],
+  workshop: ["Tech", "Culinary", "Photography", "Writing"],
+  culture: ["Theatre", "Stand-up", "Art", "Book Launch"],
+  esports: ["Tournament"],
+};
+
+// --- 2. Define Event Locations ---
+const eventLocations = [
+  {
+    name: "Starlight Amphitheater",
+    seating: {
+      "Floor": 500,
+      "Bleachers": 1500,
+      "VIP Box": 100,
+    }
+  },
+  {
+    name: "The Velvet Note",
+    seating: {
+      "Standard": 150,
+      "Balcony": 50,
+    }
+  },
+  {
+    name: "Sector 7G",
+    seating: {
+      "General Admission": 2000,
+    }
+  },
+  {
+    name: "Neo-Kyoto Convention Center",
+    seating: {
+      "Workshop Pass": 50,
+      "Auditorium Seat": 300,
+    }
+  },
+  {
+    name: "The Grand Theatre",
+    seating: {
+      "Orchestra": 400,
+      "Mezzanine": 300,
+      "Balcony": 250,
+    }
+  }
+];
+
+// --- 3. Rewrite the Events Section ---
+const eventsToCreate = [
+  {
+    name: "Synthwave Revival",
+    location: "Starlight Amphitheater",
+    date: "2025-10-20",
+    time: "21:00",
+    category: "show",
+    subcategory: "Electronic",
+    ticketPrices: { // Prices per tier
+      "Floor": "0.08",
+      "Bleachers": "0.05",
+      "VIP Box": "0.2"
+    }
+  },
+  {
+    name: "Jazz in the Dark",
+    location: "The Velvet Note",
+    date: "2025-11-15",
+    time: "20:00",
+    category: "show",
+    subcategory: "Jazz",
+    ticketPrices: {
+      "Standard": "0.04",
+      "Balcony": "0.07"
+    }
+  },
+  {
+    name: "Holografik Beats",
+    location: "Sector 7G",
+    date: "2025-12-31",
+    time: "22:00",
+    category: "show",
+    subcategory: "Electronic",
+    ticketPrices: {
+      "General Admission": "0.1"
+    }
+  },
+  {
+    name: "Web3 & The Metaverse Workshop",
+    location: "Neo-Kyoto Convention Center",
+    date: "2026-01-20",
+    time: "09:00",
+    category: "workshop",
+    subcategory: "Tech",
+    ticketPrices: {
+      "Workshop Pass": "0.15"
+    }
+  },
+  {
+    name: "The Quantum Paradox",
+    location: "The Grand Theatre",
+    date: "2026-02-10",
+    time: "19:30",
+    category: "culture",
+    subcategory: "Theatre",
+    ticketPrices: {
+      "Orchestra": "0.06",
+      "Mezzanine": "0.04",
+      "Balcony": "0.025"
+    }
+  },
+  {
+    name: "Orbital Odyssey",
+    location: "Starlight Amphitheater",
+    date: "2026-03-05",
+    time: "20:00",
+    category: "show",
+    subcategory: "Rock",
+    ticketPrices: {
+      "Floor": "0.09",
+      "Bleachers": "0.06",
+      "VIP Box": "0.25"
+    }
+  }
+];
+
+
 async function main() {
   const [deployer] = await ethers.getSigners();
   console.log("Deploying contracts with the account:", deployer.address);
@@ -17,102 +143,41 @@ async function main() {
   const contractAddress = await concertTicketMarketplace.getAddress();
   console.log("ConcertTicketMarketplace deployed to:", contractAddress);
 
-  // --- Seed the contract with some events ---
+  // --- Seed the contract with the new events ---
   console.log("Seeding the contract with initial events...");
 
-  const now = Math.floor(Date.now() / 1000);
-  const oneDay = 86400;
-
-  // Event 1: Multi-tier Rock Fest
-  let tx = await concertTicketMarketplace.createEvent(
-    "Rock Fest 2025",
-    now + oneDay * 10, // 10 days from now
-    ["General Admission", "VIP"],
-    [ethers.parseEther("0.05"), ethers.parseEther("0.15")],
-    [200, 50]
-  );
-  await tx.wait();
-  console.log("Created Multi-Tier Event: Rock Fest 2025");
-
-  // Event 2: Multi-tier Jazz Night
-  tx = await concertTicketMarketplace.createEvent(
-    "Jazz Night",
-    now + oneDay * 20, // 20 days from now
-    ["Standard", "Balcony"],
-    [ethers.parseEther("0.02"), ethers.parseEther("0.04")],
-    [100, 50]
-  );
-  await tx.wait();
-  console.log("Created Multi-Tier Event: Jazz Night");
-
-  // --- Add 10 More Events ---
-  console.log("Seeding 10 additional events...");
-
-  const additionalEvents = [
-    {
-      name: "Indie Pop Showcase",
-      date: now + oneDay * 30,
-      tiers: { names: ["Pista", "Mezanino"], prices: ["0.03", "0.06"], quantities: [300, 100] }
-    },
-    {
-      name: "Symphony of the Stars",
-      date: now + oneDay * 45,
-      tiers: { names: ["Plateia A", "Plateia B", "Camarote"], prices: ["0.1", "0.07", "0.2"], quantities: [150, 250, 40] }
-    },
-    {
-      name: "Summer Reggae Festival",
-      date: now + oneDay * 60,
-      tiers: { names: ["Entrada Única"], prices: ["0.04"], quantities: [1500] }
-    },
-    {
-      name: "Teatro: A Comédia da Vida",
-      date: now + oneDay * 70,
-      tiers: { names: ["Assento Marcado"], prices: ["0.025"], quantities: [200] }
-    },
-    {
-      name: "Metal Legends United",
-      date: now + oneDay * 80,
-      tiers: { names: ["Pista Premium", "Pista Comum"], prices: ["0.09", "0.06"], quantities: [400, 1000] }
-    },
-    {
-      name: "Workshop de Fotografia com Ana Dias",
-      date: now + oneDay * 90,
-      tiers: { names: ["Vaga"], prices: ["0.15"], quantities: [30] }
-    },
-    {
-      name: "Stand-up Comedy Night",
-      date: now + oneDay * 100,
-      tiers: { names: ["Mesa (4 pessoas)", "Individual"], prices: ["0.12", "0.035"], quantities: [50, 100] }
-    },
-    {
-      name: "Exposição de Arte Digital 'Futurismo'",
-      date: now + oneDay * 110,
-      tiers: { names: ["Entrada"], prices: ["0.01"], quantities: [500] }
-    },
-    {
-      name: "Lançamento do Livro 'Crônicas de Gelo'",
-      date: now + oneDay * 120,
-      tiers: { names: ["Entrada + Livro", "Apenas Entrada"], prices: ["0.05", "0.015"], quantities: [100, 200] }
-    },
-    {
-      name: "Final do Campeonato de eSports",
-      date: now + oneDay * 130,
-      tiers: { names: ["Arena", "VIP Experience"], prices: ["0.06", "0.18"], quantities: [2000, 150] }
+  for (const event of eventsToCreate) {
+    // Find the location details
+    const locationDetails = eventLocations.find(l => l.name === event.location);
+    if (!locationDetails) {
+      console.error(`Location "${event.location}" not found for event "${event.name}". Skipping.`);
+      continue;
     }
-  ];
 
-  for (const event of additionalEvents) {
-    tx = await concertTicketMarketplace.createEvent(
-      event.name,
-      event.date,
-      event.tiers.names,
-      event.tiers.prices.map(p => ethers.parseEther(p)),
-      event.tiers.quantities
-    );
-    await tx.wait();
-    console.log(`Created Event: ${event.name}`);
+    // Prepare data for the smart contract
+    const tierNames = Object.keys(event.ticketPrices);
+    const tierPrices = tierNames.map(tier => ethers.parseEther(event.ticketPrices[tier]));
+    const tierQuantities = tierNames.map(tier => locationDetails.seating[tier]);
+    
+    // Combine date and time and convert to Unix timestamp
+    const eventTimestamp = Math.floor(new Date(`${event.date}T${event.time}`).getTime() / 1000);
+
+    try {
+      const tx = await concertTicketMarketplace.createEvent(
+        event.name,
+        eventTimestamp,
+        tierNames,
+        tierPrices,
+        tierQuantities
+      );
+      await tx.wait();
+      console.log(`Created Event: ${event.name}`);
+    } catch (error) {
+      console.error(`Failed to create event "${event.name}":`, error);
+    }
   }
-  console.log("Finished seeding additional events.");
+  console.log("Finished seeding events.");
+
 
   // --- Save deployment artifacts for the frontend ---
 
