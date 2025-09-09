@@ -123,7 +123,7 @@ function App() {
                             onNavigateBack={handleNavigateBack}
                         />;
             case 'profile':
-                return <ProfilePage tickets={ownedTickets}/>;
+                return <ProfilePage tickets={ownedTickets} userAddress={userAddress} />;
             case 'home':
             default:
                 return <HomePage events={events} onSelectEvent={handleSelectEvent} isLoading={loading} />;

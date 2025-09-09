@@ -1,30 +1,29 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const TicketCard = ({ eventName, date, seatDetails, isPast = false }) => {
-  const cardClasses = `bg-background-secondary rounded-lg p-4 flex justify-between items-center transition-opacity ${isPast ? 'opacity-50' : ''}`;
-
+const TicketCard = ({ eventName, venue, eventImage, isPast }) => {
   return (
-    <div className={cardClasses}>
-      <div>
-        <h3 className={`text-xl font-bold ${isPast ? 'text-text-secondary' : 'text-text-main'}`}>{eventName}</h3>
-        <p className="text-text-secondary mt-1">{date}</p>
-        <p className="text-primary font-semibold">{seatDetails}</p>
+    <div className={`glass-ui ${isPast ? 'opacity-60' : ''}`}>
+      <div className="p-4">
+        <img 
+          src={eventImage} 
+          alt={eventName} 
+          className="w-full h-48 object-cover rounded-lg mb-4"
+        />
+        <h3 className="text-2xl font-bold uppercase">{eventName}</h3>
+        <p className="text-md text-secondary font-semibold mt-1">{venue}</p>
+        <button className="mt-4 w-full border-2 border-border py-3 rounded-full hover:bg-primary/20 font-semibold uppercase transition-colors">
+          View Ticket
+        </button>
       </div>
-      {!isPast && (
-        <div className="text-right">
-          <p className="text-success font-bold">VALID</p>
-          {/* Could add a QR code component here in the future */}
-        </div>
-      )}
     </div>
   );
 };
 
 TicketCard.propTypes = {
   eventName: PropTypes.string.isRequired,
-  date: PropTypes.string.isRequired,
-  seatDetails: PropTypes.string.isRequired,
+  venue: PropTypes.string.isRequired,
+  eventImage: PropTypes.string.isRequired,
   isPast: PropTypes.bool,
 };
 
