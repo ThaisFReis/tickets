@@ -7,25 +7,31 @@ const EventCard = ({ event, onSelectEvent }) => {
 
     return (
         <div 
-            className={`bg-gray-800 rounded-lg overflow-hidden shadow-lg transform hover:-translate-y-2 transition-transform duration-300 cursor-pointer ${isPast ? 'opacity-50' : ''}`}
+            className={`glass-ui ${isPast ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             onClick={() => !isPast && onSelectEvent(event)}
         >
-            <img className="w-full h-48 object-cover" src={event.image} alt={event.name} />
-            <div className="p-6">
-                <h3 className="text-xl font-bold text-white mb-2">{event.name}</h3>
-                <p className="text-gray-400 text-sm mb-1">{event.artist}</p>
-                <p className="text-gray-400 text-sm mb-4">{new Date(event.date).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-                <div className="flex justify-between items-center">
-                    <span className="text-violet-400 font-bold">A partir de {event.tiers[0].price} ETH</span>
-                     {isPast && <span className="text-red-500 font-bold text-sm">EVENTO ENCERRADO</span>}
-                </div>
+            <div className="p-4">
+                <img 
+                    src={event.image} 
+                    alt={event.name} 
+                    className="w-full h-48 object-cover rounded-lg mb-4"
+                />
+                <h3 className="text-2xl font-bold uppercase">{event.name}</h3>
+                <p className="text-md text-secondary font-semibold mt-1">{event.venue}</p>
+                {isPast && <p className="text-destructive font-bold text-sm mt-2">EVENT ENDED</p>}
             </div>
         </div>
     );
 };
 
 EventCard.propTypes = {
-    event: PropTypes.object.isRequired,
+    event: PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        name: PropTypes.string.isRequired,
+        date: PropTypes.string.isRequired,
+        image: PropTypes.string.isRequired,
+        venue: PropTypes.string.isRequired,
+    }).isRequired,
     onSelectEvent: PropTypes.func.isRequired,
 };
 
