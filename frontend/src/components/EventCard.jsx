@@ -5,13 +5,6 @@ const EventCard = ({ event, onSelectEvent }) => {
   const eventDate = new Date(event.date);
   const isPast = eventDate < new Date();
 
-  // Format date as YYYY-MM-DD HH-MM
-  const formattedDate = `${eventDate.getFullYear()}-${String(
-    eventDate.getMonth() + 1
-  ).padStart(2, "0")}-${String(eventDate.getDate()).padStart(2, "0")} ${String(
-    eventDate.getHours()
-  ).padStart(2, "0")}-${String(eventDate.getMinutes()).padStart(2, "0")}`;
-
   const monthAbbr = eventDate
     .toLocaleString("en-US", { month: "short" })
     .toUpperCase();

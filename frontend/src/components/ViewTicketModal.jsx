@@ -45,14 +45,14 @@ const ViewTicketModal = ({ ticket, onClose }) => {
                         <div>
                             <h2 className="text-4xl lg:text-5xl font-extrabold uppercase text-glow2">{ticket.eventName}</h2>
                             <p className="text-lg text-secondary font-semibold mt-1">{eventDate}</p>
-                            <p className="text-md text-muted-foreground mt-1">{ticket.venue || 'Decentralized Arena'}</p>
+                            <p className="text-md text-muted-foreground mt-1">{ticket.venue}</p>
                         </div>
                         
                         <div className="border-t border-border/50"></div>
 
                         <div>
                             <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-2">Ticket Info</h3>
-                            <p><span className="font-bold">Type:</span> {ticket.seatId ? 'Seated' : 'Floor'}</p>
+                            <p><span className="font-bold">Type:</span> {ticket.seatId ? 'Seated' : 'N/A'}</p>
                             <p><span className="font-bold">Seat:</span> {ticket.seatId || 'N/A'}</p>
                         </div>
 

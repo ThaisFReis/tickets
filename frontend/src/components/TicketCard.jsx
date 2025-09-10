@@ -4,13 +4,6 @@ import PropTypes from "prop-types";
 const TicketCard = ({ ticket, onSelectTicket, isPast }) => {
   const eventDate = new Date(ticket.eventDate);
 
-  // Format date as YYYY-MM-DD HH-MM
-  const formattedDate = `${eventDate.getFullYear()}-${String(
-    eventDate.getMonth() + 1
-  ).padStart(2, "0")}-${String(eventDate.getDate()).padStart(2, "0")} ${String(
-    eventDate.getHours()
-  ).padStart(2, "0")}-${String(eventDate.getMinutes()).padStart(2, "0")}`;
-
   const monthAbbr = eventDate
     .toLocaleString("en-US", { month: "short" })
     .toUpperCase();

@@ -1,6 +1,8 @@
 import { ethers } from 'ethers';
 import contractAbi from '../contract-abi.json';
 import contractAddress from '../contract-address.json';
+import { eventLocations } from '../locations-data';
+import { eventsMetadata } from '../events-metadata';
 
 let provider;
 if (window.ethereum) {
@@ -95,18 +97,26 @@ const getEventDetails = async (eventId) => {
 const getEventTiers = async (eventId) => {
   try {
     const contract = await getContract();
+    const eventDetails = await contract.getEventDetails(eventId);
+    const eventName = eventDetails[0];
+    const eventMeta = eventsMetadata.find(e => e.name === eventName);
+    const locationMeta = eventLocations.find(l => l.name === eventMeta?.location);
+
     const tiers = [];
     let i = 1;
     while (true) {
       try {
         const tier = await contract.getTicketTier(eventId, i);
+        const tierName = tier.name;
+        const tierType = locationMeta?.seating[tierName]?.type || 'standing';
+
         tiers.push({
           tierId: Number(tier.typeId),
-          name: tier.name,
+          name: tierName,
           price: tier.price.toString(),
           totalQuantity: Number(tier.quantity),
           sold: Number(tier.sold),
-          type: 'seated', // Placeholder
+          type: tierType,
         });
         i++;
       } catch {

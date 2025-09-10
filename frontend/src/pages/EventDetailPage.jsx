@@ -1,20 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { ArrowLeft } from 'lucide-react'; // Using lucide-react, will need to install
+import { ArrowLeft } from 'lucide-react';
 import TicketTypeSelector from '../components/TicketTypeSelector';
 import QuantitySelector from '../components/QuantitySelector';
-import SeatSelectionMap from '../components/SeatSelectionMap';
 import PurchaseSummary from '../components/PurchaseSummary';
-
-// Mock data for now, will be replaced with actual data fetching
-const MOCK_VENUE_LAYOUT = {
-    seatedSections: [
-        { tierName: 'Bleachers', name: 'Section A', rows: 8, seatsPerRow: 16 },
-        { tierName: 'Bleachers', name: 'Section B', rows: 8, seatsPerRow: 18 },
-        { tierName: 'VIP', name: 'VIP Lounge', rows: 4, seatsPerRow: 8, isVIP: true },
-    ],
-    soldSeats: ['A-1-3', 'A-1-4', 'B-3-8', 'B-3-9', 'V-2-1']
-};
+import SeatSelectionMap from '../components/SeatSelectionMap'; // Re-import SeatSelectionMap
+import { getEventTiers } from '../services/ethers';
 
 
 const EventDetailPage = ({ event, onPurchase, onNavigateBack, walletConnected }) => {
@@ -29,15 +20,11 @@ const EventDetailPage = ({ event, onPurchase, onNavigateBack, walletConnected })
             if (!event?.id) return;
             try {
                 setIsLoadingTiers(true);
-                // This is a placeholder for fetching real tier data
-                // In the new design, we have 'Floor', 'Bleachers', 'VIP'
-                const fetchedTiers = [
-                    { tierId: 1, name: 'Floor', price: '10000000000000000', type: 'standing' },
-                    { tierId: 2, name: 'Bleachers', price: '15000000000000000', type: 'seated' },
-                    { tierId: 3, name: 'VIP', price: '30000000000000000', type: 'seated' },
-                ];
-                setTicketTiers(fetchedTiers);
-                setSelectedTier(fetchedTiers[0]); // Select 'Floor' by default
+                const tiers = await getEventTiers(event.id);
+                setTicketTiers(tiers);
+                if (tiers.length > 0) {
+                    setSelectedTier(tiers[0]);
+                }
             } catch (error) {
                 console.error("Failed to fetch ticket tiers:", error);
             } finally {
@@ -49,8 +36,8 @@ const EventDetailPage = ({ event, onPurchase, onNavigateBack, walletConnected })
 
     const handleTierSelect = (tier) => {
         setSelectedTier(tier);
-        setSelectedSeats([]);
         setQuantity(1);
+        setSelectedSeats([]);
     };
     
     const totalPrice = useMemo(() => {
@@ -59,8 +46,7 @@ const EventDetailPage = ({ event, onPurchase, onNavigateBack, walletConnected })
         if (count === 0) return "0";
         const priceInWei = BigInt(selectedTier.price);
         return (BigInt(count) * priceInWei).toString();
-    }, [selectedTier, selectedSeats, quantity]);
-
+    }, [selectedTier, quantity, selectedSeats]);
 
     return (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
@@ -71,20 +57,20 @@ const EventDetailPage = ({ event, onPurchase, onNavigateBack, walletConnected })
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to Events</span>
             </button>
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-                <div className="lg:col-span-3">
+            <div className="grid grid-cols-1 lg:flex gap-12">
+                <div className="lg:col-span-3 lg:w-1/3">
                     <img 
                         src={event.image} 
                         alt={event.name} 
-                        className="w-4/5 rounded-2xl object-cover mb-6 border-2 border-border shadow-lg"
+                        className="w-full rounded-2xl object-cover mb-6 border-2 border-border shadow-lg"
                     />
-                    <h1 className="text-6xl font-extrabold uppercase text-glow2">{event.name}</h1>
-                    <p className="text-lg text-primary font-medium mt-2">{event.venue}</p>
+                    <h1 className="text-4xl font-extrabold uppercase text-glow2 w-full text-pretty">{event.name}</h1>
+                    <p className="text-lg font-semibold mt-2">{event.location}</p>
                     <div className="mt-6 text-lg text-muted-foreground">
                         <p>{event.description}</p>
                     </div>
                 </div>
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2 lg:w-2/3">
                     <div className="glass-ui p-6 sticky top-28">
                         <h2 className="text-3xl font-bold uppercase mb-6">Select Tickets</h2>
                         
@@ -97,19 +83,20 @@ const EventDetailPage = ({ event, onPurchase, onNavigateBack, walletConnected })
                         )}
 
                         {selectedTier?.type === 'standing' && (
-                            <QuantitySelector
-                                quantity={quantity}
-                                setQuantity={setQuantity}
-                            />
+                          <QuantitySelector
+                              quantity={quantity}
+                              setQuantity={setQuantity}
+                          />
                         )}
 
                         {selectedTier?.type === 'seated' && (
-                            <SeatSelectionMap
-                                layout={MOCK_VENUE_LAYOUT}
-                                selectedSeats={selectedSeats}
-                                onSelectSeat={setSelectedSeats}
-                                tierName={selectedTier.name}
-                            />
+                          <SeatSelectionMap
+                            event={event}
+                            selectedTier={selectedTier}
+                            selectedSeats={selectedSeats}
+                            onSelectSeat={setSelectedSeats}
+                            // soldSeats will come from the contract in a real app
+                          />
                         )}
                         
                         <PurchaseSummary

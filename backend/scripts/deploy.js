@@ -4,7 +4,16 @@ const path = require("path");
 
 // --- 1. Define Event Categories ---
 const eventCategories = {
-  show: ["Rock", "Pop", "Indie", "Electronic", "Jazz", "Symphony", "Reggae", "Metal"],
+  show: [
+    "Rock",
+    "Pop",
+    "Indie",
+    "Electronic",
+    "Jazz",
+    "Symphony",
+    "Reggae",
+    "Metal",
+  ],
   workshop: ["Tech", "Culinary", "Photography", "Writing"],
   culture: ["Theatre", "Stand-up", "Art", "Book Launch"],
   esports: ["Tournament"],
@@ -15,39 +24,42 @@ const eventLocations = [
   {
     name: "Starlight Amphitheater",
     seating: {
-      "Floor": 500,
-      "Bleachers": 1500,
+      "General Admission Flor": 700,
+      "Premium Floor": 500,
+      "Mezzanine 1": 800,
+      "Mezzanine 2": 900,
       "VIP Box": 100,
-    }
+      "General Admission Lawn": 1000,
+    },
   },
   {
     name: "The Velvet Note",
     seating: {
-      "Standard": 150,
-      "Balcony": 50,
-    }
+      Standard: 150,
+      Balcony: 50,
+    },
   },
   {
     name: "Sector 7G",
     seating: {
       "General Admission": 2000,
-    }
+    },
   },
   {
     name: "Neo-Kyoto Convention Center",
     seating: {
       "Workshop Pass": 50,
       "Auditorium Seat": 300,
-    }
+    },
   },
   {
     name: "The Grand Theatre",
     seating: {
-      "Orchestra": 400,
-      "Mezzanine": 300,
-      "Balcony": 250,
-    }
-  }
+      Orchestra: 400,
+      Mezzanine: 300,
+      Balcony: 250,
+    },
+  },
 ];
 
 // --- 3. Rewrite the Events Section ---
@@ -59,11 +71,14 @@ const eventsToCreate = [
     time: "21:00",
     category: "show",
     subcategory: "Electronic",
-    ticketPrices: { // Prices per tier
-      "Floor": "0.08",
-      "Bleachers": "0.05",
-      "VIP Box": "0.2"
-    }
+    ticketPrices: {
+      "General Admission Flor": "3",
+      "Premium Floor": "4.5",
+      "Mezzanine 1": "2",
+      "Mezzanine 2": "1",
+      "VIP Box": "10",
+      "General Admission Lawn": "0.5",
+    },
   },
   {
     name: "Jazz in the Dark",
@@ -73,9 +88,9 @@ const eventsToCreate = [
     category: "show",
     subcategory: "Jazz",
     ticketPrices: {
-      "Standard": "0.04",
-      "Balcony": "0.07"
-    }
+      Standard: "0.04",
+      Balcony: "0.07",
+    },
   },
   {
     name: "Holografik Beats",
@@ -85,8 +100,8 @@ const eventsToCreate = [
     category: "show",
     subcategory: "Electronic",
     ticketPrices: {
-      "General Admission": "0.1"
-    }
+      "General Admission": "0.1",
+    },
   },
   {
     name: "Web3 & The Metaverse Workshop",
@@ -96,8 +111,8 @@ const eventsToCreate = [
     category: "workshop",
     subcategory: "Tech",
     ticketPrices: {
-      "Workshop Pass": "0.15"
-    }
+      "Workshop Pass": "0.15",
+    },
   },
   {
     name: "The Quantum Paradox",
@@ -107,10 +122,10 @@ const eventsToCreate = [
     category: "culture",
     subcategory: "Theatre",
     ticketPrices: {
-      "Orchestra": "0.06",
-      "Mezzanine": "0.04",
-      "Balcony": "0.025"
-    }
+      Orchestra: "0.06",
+      Mezzanine: "0.04",
+      Balcony: "0.025",
+    },
   },
   {
     name: "Orbital Odyssey",
@@ -120,13 +135,15 @@ const eventsToCreate = [
     category: "show",
     subcategory: "Rock",
     ticketPrices: {
-      "Floor": "0.09",
-      "Bleachers": "0.06",
-      "VIP Box": "0.25"
-    }
-  }
+      "General Admission Flor": "3",
+      "Premium Floor": "4.5",
+      "Mezzanine 1": "2",
+      "Mezzanine 2": "1",
+      "VIP Box": "10",
+      "General Admission Lawn": "0.5",
+    },
+  },
 ];
-
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -135,8 +152,13 @@ async function main() {
   const tokenName = "MyTickets";
   const tokenSymbol = "MTK";
 
-  const ConcertTicketMarketplace = await ethers.getContractFactory("ConcertTicketMarketplace");
-  const concertTicketMarketplace = await ConcertTicketMarketplace.deploy(tokenName, tokenSymbol);
+  const ConcertTicketMarketplace = await ethers.getContractFactory(
+    "ConcertTicketMarketplace"
+  );
+  const concertTicketMarketplace = await ConcertTicketMarketplace.deploy(
+    tokenName,
+    tokenSymbol
+  );
 
   await concertTicketMarketplace.waitForDeployment();
 
@@ -148,19 +170,29 @@ async function main() {
 
   for (const event of eventsToCreate) {
     // Find the location details
-    const locationDetails = eventLocations.find(l => l.name === event.location);
+    const locationDetails = eventLocations.find(
+      (l) => l.name === event.location
+    );
     if (!locationDetails) {
-      console.error(`Location "${event.location}" not found for event "${event.name}". Skipping.`);
+      console.error(
+        `Location "${event.location}" not found for event "${event.name}". Skipping.`
+      );
       continue;
     }
 
     // Prepare data for the smart contract
     const tierNames = Object.keys(event.ticketPrices);
-    const tierPrices = tierNames.map(tier => ethers.parseEther(event.ticketPrices[tier]));
-    const tierQuantities = tierNames.map(tier => locationDetails.seating[tier]);
-    
+    const tierPrices = tierNames.map((tier) =>
+      ethers.parseEther(event.ticketPrices[tier])
+    );
+    const tierQuantities = tierNames.map(
+      (tier) => locationDetails.seating[tier]
+    );
+
     // Combine date and time and convert to Unix timestamp
-    const eventTimestamp = Math.floor(new Date(`${event.date}T${event.time}`).getTime() / 1000);
+    const eventTimestamp = Math.floor(
+      new Date(`${event.date}T${event.time}`).getTime() / 1000
+    );
 
     try {
       const tx = await concertTicketMarketplace.createEvent(
@@ -178,7 +210,6 @@ async function main() {
   }
   console.log("Finished seeding events.");
 
-
   // --- Save deployment artifacts for the frontend ---
 
   // 1. Save the contract address
@@ -190,17 +221,27 @@ async function main() {
   console.log(`Contract address saved to ${addressPath}`);
 
   // 2. Save the contract ABI
-  const abiDir = path.join(__dirname, "..", "artifacts", "contracts", "ConcertTicketMarketplace.sol");
+  const abiDir = path.join(
+    __dirname,
+    "..",
+    "artifacts",
+    "contracts",
+    "ConcertTicketMarketplace.sol"
+  );
   const abiSrcPath = path.join(abiDir, "ConcertTicketMarketplace.json");
-  const abiDestPath = path.join(__dirname, "..", "..", "frontend", "src", "contract-abi.json");
-  
+  const abiDestPath = path.join(
+    __dirname,
+    "..",
+    "..",
+    "frontend",
+    "src",
+    "contract-abi.json"
+  );
+
   const abiFile = fs.readFileSync(abiSrcPath, "utf8");
   const abiJson = JSON.parse(abiFile);
 
-  fs.writeFileSync(
-    abiDestPath,
-    JSON.stringify(abiJson.abi, undefined, 2)
-  );
+  fs.writeFileSync(abiDestPath, JSON.stringify(abiJson.abi, undefined, 2));
   console.log(`Contract ABI saved to ${abiDestPath}`);
 }
 
