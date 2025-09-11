@@ -1,42 +1,31 @@
-// This file contains the layout and capacity for each venue location.
+// This file contains the seating layout and capacity data for each venue.
+// This data should be kept in sync with the `eventLocations` object in `backend/scripts/deploy.js`.
+
 export const eventLocations = [
   {
     name: "Starlight Amphitheater",
     seating: {
-      "General Admission Floor": { type: 'standing', capacity: 700 },
-      "Premium Floor": { type: 'standing', capacity: 500 },
-      "Mezzanine 1": { type: 'seated', capacity: 800, layout: { rows: 20, seatsPerRow: 40 } },
-      "Mezzanine 2": { type: 'seated', capacity: 900, layout: { rows: 25, seatsPerRow: 36 } },
-      "VIP Box": { type: 'seated', capacity: 100, layout: { rows: 10, seatsPerRow: 10 } },
-      "General Admission Lawn": { type: 'standing', capacity: 1000 },
-    }
-  },
-  {
-    name: "The Velvet Note",
-    seating: {
-      "Standard": { type: 'seated', capacity: 150, layout: { rows: 10, seatsPerRow: 15 } },
-      "Balcony": { type: 'seated', capacity: 50, layout: { rows: 5, seatsPerRow: 10 } },
-    }
-  },
-  {
-    name: "Sector 7G",
-    seating: {
-      "General Admission": { type: 'standing', capacity: 2000 },
-    }
+      "General Admission Flor": { capacity: 700, type: "standing" },
+      "Premium Floor": { capacity: 500, type: "standing" },
+      "Mezzanine 1": { capacity: 800, type: "seated" },
+      "Mezzanine 2": { capacity: 900, type: "seated" },
+      "VIP Box": { capacity: 100, type: "seated" },
+      "General Admission Lawn": { capacity: 1000, type: "seated" },
+    },
   },
   {
     name: "Neo-Kyoto Convention Center",
     seating: {
-      "Workshop Pass": { type: 'standing', capacity: 50 },
-      "Auditorium Seat": { type: 'seated', capacity: 300, layout: { rows: 15, seatsPerRow: 20 } },
-    }
+      "Workshop Pass": { capacity: 50, type: "standing" },
+      "Auditorium Seat": { capacity: 300, type: "seated" },
+    },
   },
   {
     name: "The Grand Theatre",
     seating: {
-      "Orchestra": { type: 'seated', capacity: 400, layout: { rows: 20, seatsPerRow: 20 } },
-      "Mezzanine": { type: 'seated', capacity: 300, layout: { rows: 15, seatsPerRow: 20 } },
-      "Balcony": { type: 'seated', capacity: 250, layout: { rows: 10, seatsPerRow: 25 } },
-    }
-  }
+      Orchestra: { capacity: 400, type: "seated" },
+      Mezzanine: { capacity: 300, type: "seated" },
+      Balcony: { capacity: 250, type: "seated" },
+    },
+  },
 ];

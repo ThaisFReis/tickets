@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { HelpCircle, CheckCircle2 } from "lucide-react";
+import { HelpCircle, CheckCircle2, XCircle } from "lucide-react";
 import { ethers } from "ethers";
 
 const TransactionModal = ({
@@ -23,10 +23,8 @@ const TransactionModal = ({
 
   const getPurchaseDescription = () => {
     if (!purchaseDetails) return "";
-    const { seats, event } = purchaseDetails;
-    const quantity = seats.length > 0 ? seats.length : 1; // Assuming quantity 1 for standing
-    const ticketType = seats.length > 0 ? "Seated Ticket(s)" : "Floor Ticket";
-    return `You are about to purchase ${quantity}x ${ticketType} for ${event.name}`;
+    const { tier, quantity, event } = purchaseDetails;
+    return `You are about to purchase ${quantity}x ${tier.name} ticket(s) for ${event.name}`;
   };
 
   const renderContent = () => {
@@ -35,7 +33,7 @@ const TransactionModal = ({
         return (
           <div className="p-10 text-center">
             <div className="flex h-fit w-full gap-2 items-center justify-center mb-6">
-              <HelpCircle className="w-8 h-8 text-primary-foreground" />
+              <HelpCircle asChild className="w-8 h-8 text-primary-foreground" />
               <h3 className="text-2xl font-bold uppercase text-primary-foreground">
                 Confirm Purchase
               </h3>
@@ -82,7 +80,7 @@ const TransactionModal = ({
         return (
           <div className="p-8 text-center">
             <div className="w-16 h-16 rounded-full bg-primary/20 p-1 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle2 className="w-14 h-14 text-primary" />
+              <CheckCircle2 asChild className="w-14 h-14 text-primary" />
             </div>
             <h3 className="mb-5 text-2xl font-bold uppercase">Success!</h3>
             <p className="mb-6 text-md text-muted-foreground">
@@ -96,7 +94,24 @@ const TransactionModal = ({
             </button>
           </div>
         );
-      // You can add a 'failed' case here as well if needed
+      case "error":
+        return (
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 rounded-full bg-destructive/20 p-1 flex items-center justify-center mx-auto mb-4">
+              <XCircle asChild className="w-14 h-14 text-destructive" />
+            </div>
+            <h3 className="mb-5 text-2xl font-bold uppercase">Transaction Failed</h3>
+            <p className="mb-6 text-md text-muted-foreground">
+              Something went wrong. Please try again.
+            </p>
+            <button
+              onClick={() => setModalState("closed")}
+              className="y2k-btn text-sm inline-flex items-center px-8 py-3 text-center"
+            >
+              Close
+            </button>
+          </div>
+        );
       default:
         return null;
     }

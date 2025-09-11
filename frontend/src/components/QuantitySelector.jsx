@@ -2,15 +2,16 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Plus, Minus } from 'lucide-react';
 
-const QuantitySelector = ({ quantity, setQuantity }) => {
+const QuantitySelector = ({ quantity, setQuantity, maxQuantity }) => {
   const handleDecrement = () => {
     setQuantity(q => Math.max(1, q - 1));
   };
 
   const handleIncrement = () => {
-    // Assuming a max quantity of 10 for now
-    setQuantity(q => Math.min(10, q + 1));
+    setQuantity(q => Math.min(maxQuantity, q + 1));
   };
+
+  const isMax = quantity >= maxQuantity;
 
   return (
     <div>
@@ -25,11 +26,17 @@ const QuantitySelector = ({ quantity, setQuantity }) => {
         <span className="text-2xl font-bold w-8 text-center">{quantity}</span>
         <button 
           onClick={handleIncrement}
-          className="normal-bnt p-3 border border-border rounded-full transition-colors"
+          disabled={isMax}
+          className="normal-bnt p-3 border border-border rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus size={16} />
         </button>
       </div>
+      {isMax && (
+        <p className="text-destructive text-xs mt-2">
+          No more tickets available for this tier.
+        </p>
+      )}
     </div>
   );
 };
@@ -37,6 +44,7 @@ const QuantitySelector = ({ quantity, setQuantity }) => {
 QuantitySelector.propTypes = {
   quantity: PropTypes.number.isRequired,
   setQuantity: PropTypes.func.isRequired,
+  maxQuantity: PropTypes.number.isRequired,
 };
 
 export default QuantitySelector;

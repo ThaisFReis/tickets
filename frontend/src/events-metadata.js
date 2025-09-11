@@ -49,5 +49,61 @@ export const eventsMetadata = [
     subcategory: "Rock",
     description: "A rock opera set in space. Prepare for an epic journey with soaring guitars and cosmic visuals.",
     image: `https://placehold.co/600x400/f0f0f0/333333/png?text=Orbital+Odyssey`
+  },
+  {
+    name: "Jazz Under the Stars",
+    location: "The Grand Theatre",
+    category: "show",
+    subcategory: "Jazz",
+    description: "An enchanting evening of smooth jazz under the open sky. A truly magical experience.",
+    image: `https://placehold.co/600x400/f0f0f0/333333/png?text=Jazz+Under+the+Stars`
+  },
+  {
+    name: "Realms of Steel",
+    location: "Starlight Amphitheater",
+    category: "show",
+    subcategory: "Metal",
+    description: "Prepare for a night of headbanging and epic riffs with the titans of metal.",
+    image: `https://placehold.co/600x400/f0f0f0/333333/png?text=Realms+of+Steel`
+  },
+  {
+    name: "Capturing the Moment: A Photography Workshop",
+    location: "Neo-Kyoto Convention Center",
+    category: "workshop",
+    subcategory: "Photography",
+    description: "Learn the art of photography from the masters. All skill levels are welcome.",
+    image: `https://placehold.co/600x400/f0f0f0/333333/png?text=Photography+Workshop`
+  },
+  {
+    name: "Chronicles of Laughter",
+    location: "Neo-Kyoto Convention Center",
+    category: "culture",
+    subcategory: "Stand-up",
+    description: "Get ready to laugh until you cry with a lineup of the best comedians in the business.",
+    image: `https://placehold.co/600x400/f0f0f0/333333/png?text=Chronicles+of+Laughter`
+  },
+  {
+    name: "Indie Echoes Fest",
+    location: "The Grand Theatre",
+    category: "show",
+    subcategory: "Indie",
+    description: "Discover your new favorite band at this celebration of independent music.",
+    image: `https://placehold.co/600x400/f0f0f0/333333/png?text=Indie+Echoes+Fest`
+  },
+  {
+    name: "Cybernetic Showdown",
+    location: "Neo-Kyoto Convention Center",
+    category: "esports",
+    subcategory: "Tournament",
+    description: "Watch the pros battle it out in the biggest e-sports tournament of the year.",
+    image: `https://placehold.co/600x400/f0f0f0/333333/png?text=Cybernetic+Showdown`
+  },
+  {
+    name: "Echoes of the Void",
+    location: "The Grand Theatre",
+    category: "show",
+    subcategory: "Electronic",
+    description: "A journey into the heart of darkness, with haunting melodies and visceral beats.",
+    image: `https://placehold.co/600x400/f0f0f0/333333/png?text=Echoes+of+the+Void`
   }
 ];

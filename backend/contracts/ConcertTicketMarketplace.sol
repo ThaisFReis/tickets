@@ -134,6 +134,44 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
         ticketTier.sold += _seatIds.length;
     }
 
+    function purchaseTickets(
+        uint256 _eventId,
+        uint256 _typeId,
+        uint256 _quantity
+    ) public payable {
+        require(_eventId > 0 && _eventId < nextEventId, "Event not found");
+        Event storage currentEvent = events[_eventId];
+        TicketType storage ticketTier = currentEvent.ticketTiers[_typeId];
+
+        require(block.timestamp < currentEvent.date, "Event has already passed");
+        require(ticketTier.price > 0, "Invalid ticket tier");
+
+        uint256 totalCost = ticketTier.price * _quantity;
+        require(msg.value >= totalCost, "Insufficient payment");
+
+        require(
+            ticketTier.sold + _quantity <= ticketTier.quantity,
+            "Not enough tickets available for this tier"
+        );
+
+        for (uint256 i = 0; i < _quantity; i++) {
+            // For non-seated tickets, seatId can be 0 or tracked differently
+            uint256 seatId = 0; 
+            tickets[nextTokenId] = Ticket(_eventId, _typeId, seatId);
+            _safeMint(msg.sender, nextTokenId);
+            emit TicketPurchased(
+                _eventId,
+                nextTokenId,
+                msg.sender,
+                _typeId,
+                seatId
+            );
+            nextTokenId++;
+        }
+
+        ticketTier.sold += _quantity;
+    }
+
     function getEventDetails(
         uint256 _eventId
     ) public view returns (string memory name, uint256 date, address organizer) {
@@ -169,6 +207,16 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
             tokenIds[i] = tokenOfOwnerByIndex(_owner, i);
         }
         return tokenIds;
+    }
+
+    function getTicketDetails(
+        uint256 _tokenId
+    ) public view returns (uint256 eventId, string memory tierName, uint256 seatId) {
+        require(ownerOf(_tokenId) != address(0), "Ticket does not exist");
+        Ticket memory ticket = tickets[_tokenId];
+        Event storage currentEvent = events[ticket.eventId];
+        TicketType storage ticketTier = currentEvent.ticketTiers[ticket.typeId];
+        return (ticket.eventId, ticketTier.name, ticket.seatId);
     }
 
     // The following functions are overrides required by Solidity.

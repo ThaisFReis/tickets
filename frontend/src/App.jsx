@@ -4,9 +4,11 @@ import HomePage from './pages/HomePage';
 import EventDetailPage from './pages/EventDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import TransactionModal from './components/TransactionModal';
-import { fetchAllEvents } from './services/ethers';
-import { eventsMetadata } from './events-metadata'; // Import the metadata
+import Footer from './components/Footer';
+import { fetchAllEvents, connectWallet, purchaseTickets, fetchUserTickets } from './services/ethers';
+import { eventsMetadata } from './events-metadata';
 import './index.css';
+import EventCardSkeleton from './components/EventCardSkeleton';
 
 function App() {
     const [currentPage, setCurrentPage] = useState('home');
@@ -27,14 +29,21 @@ function App() {
                 setLoading(true);
                 const fetchedEvents = await fetchAllEvents();
                 
-                // Merge on-chain data with off-chain metadata
                 const eventsWithDetails = fetchedEvents.map(event => {
                     const metadata = eventsMetadata.find(m => m.name === event.name) || {};
+                    const dateObj = new Date(Number(event.date) * 1000);
+
+                    const year = dateObj.getFullYear();
+                    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                    const day = String(dateObj.getDate()).padStart(2, '0');
+                    const localDateString = `${year}-${month}-${day}`;
+
                     return {
+                        ...event,
                         id: Number(event.eventId),
-                        name: event.name,
-                        date: new Date(Number(event.date) * 1000).toISOString(),
-                        ...metadata, // Add location, description, image, etc.
+                        date: dateObj.toISOString(),
+                        localDate: localDateString,
+                        ...metadata,
                     };
                 });
 
@@ -50,14 +59,89 @@ function App() {
         loadEvents();
     }, []);
 
-    const handleConnectWallet = () => {
+    useEffect(() => {
+        const handleAccountsChanged = (accounts) => {
+            if (accounts.length > 0) {
+                const address = accounts[0];
+                setUserAddress(address);
+                setWalletConnected(true);
+            } else {
+                setWalletConnected(false);
+                setUserAddress('');
+                setOwnedTickets([]);
+            }
+        };
+
+        const handleChainChanged = () => {
+            window.location.reload();
+        };
+
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', handleAccountsChanged);
+            window.ethereum.on('chainChanged', handleChainChanged);
+
+            const checkConnection = async () => {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                    if (accounts.length > 0) {
+                        handleAccountsChanged(accounts);
+                    }
+                } catch (error) {
+                    console.error("Error checking for wallet connection:", error);
+                }
+            };
+            checkConnection();
+        }
+
+        return () => {
+            if (window.ethereum) {
+                window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+                window.ethereum.removeListener('chainChanged', handleChainChanged);
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        const loadUserTickets = async () => {
+            if (userAddress && events.length > 0) {
+                try {
+                    const tickets = await fetchUserTickets(userAddress);
+                    const ticketsWithMetadata = tickets.map(ticket => {
+                        const event = events.find(e => e.id === Number(ticket.eventId));
+                        if (!event) return null;
+                        return { 
+                            ...ticket, 
+                            eventName: event.name, 
+                            eventDate: event.date, 
+                            eventImage: event.image, 
+                            venue: event.location 
+                        };
+                    }).filter(Boolean);
+                    setOwnedTickets(ticketsWithMetadata);
+                } catch (error) {
+                    console.error("Failed to fetch user tickets:", error);
+                }
+            } else {
+                setOwnedTickets([]);
+            }
+        };
+        loadUserTickets();
+    }, [userAddress, events]);
+
+    const handleConnectWallet = async () => {
         if (walletConnected) {
             setWalletConnected(false);
             setUserAddress('');
+            setOwnedTickets([]);
         } else {
-            // In a real app, you would use ethers.js here
-            setWalletConnected(true);
-            setUserAddress('0x1a2b...c3d4');
+            try {
+                const { address } = await connectWallet();
+                setUserAddress(address);
+                setWalletConnected(true);
+            } catch (error) {
+                console.error("Failed to connect wallet:", error);
+                alert("Failed to connect wallet. Please make sure MetaMask is installed and unlocked.");
+            }
         }
     };
     
@@ -73,7 +157,7 @@ function App() {
             return;
         }
         setCurrentPage(page);
-        setSelectedEvent(null); // Reset selected event when navigating away
+        setSelectedEvent(null);
         window.scrollTo(0, 0);
     };
 
@@ -82,41 +166,52 @@ function App() {
         setSelectedEvent(null);
     }
 
-    const handlePurchase = (seats, totalPrice) => {
-        setPurchaseDetails({ event: selectedEvent, seats, totalPrice });
+    const handlePurchase = (tier, quantity, totalPrice) => {
+        setPurchaseDetails({ 
+            event: selectedEvent, 
+            tier,
+            quantity,
+            totalPrice
+        });
         setModalState('confirm');
     };
 
-    const handleConfirmPurchase = () => {
+    const handleConfirmPurchase = async () => {
+        if (!purchaseDetails) return;
         setModalState('processing');
-        // Simulate blockchain transaction
-        setTimeout(() => {
-            const newTickets = (purchaseDetails.seats.length > 0 ? purchaseDetails.seats : [{seatId: 'Floor'}]).map((seat, index) => ({
-                tokenId: `NFT-${Date.now()}-${index}`,
-                eventId: purchaseDetails.event.id,
-                eventName: purchaseDetails.event.name,
-                eventDate: purchaseDetails.event.date,
-                eventImage: purchaseDetails.event.image,
-                venue: purchaseDetails.event.location,
-                seatId: seat.seatId,
-            }));
-
-            setOwnedTickets(prev => [...prev, ...newTickets]);
-            setModalState('success');
+        try {
+            const { event, tier, quantity, totalPrice } = purchaseDetails;
             
-            // After success, close modal and navigate to profile
+            await purchaseTickets(event.id, tier, quantity, totalPrice);
+
+            setModalState('success');
+
+            const updatedTickets = await fetchUserTickets(userAddress);
+             const ticketsWithMetadata = updatedTickets.map(ticket => {
+                const event = events.find(e => e.id === Number(ticket.eventId));
+                if (!event) return null;
+                return { 
+                    ...ticket, 
+                    eventName: event.name, 
+                    eventDate: event.date, 
+                    eventImage: event.image, 
+                    venue: event.location 
+                };
+            }).filter(Boolean);
+            setOwnedTickets(ticketsWithMetadata);
+            
             setTimeout(() => {
                 setModalState('closed');
                 setCurrentPage('profile');
                 window.scrollTo(0, 0);
             }, 3000);
-        }, 3000);
+        } catch (error) {
+            console.error("Purchase failed:", error);
+            setModalState('error');
+        }
     };
     
     const renderPage = () => {
-        if (loading) return <div className="text-center text-lg text-muted-foreground pt-48">Loading events...</div>;
-        if (error) return <div className="text-center text-red-500 pt-48">{error}</div>;
-
         switch (currentPage) {
             case 'event':
                 return <EventDetailPage 
@@ -134,7 +229,7 @@ function App() {
     };
 
     return (
-        <div className="bg-background min-h-screen">
+        <div className="bg-background min-h-screen flex flex-col">
             <div className="gradient-bg">
                 <div className="shape1"></div>
                 <div className="shape2"></div>
@@ -145,7 +240,7 @@ function App() {
                 onConnectWallet={handleConnectWallet}
                 onNavigate={handleNavigate}
             />
-            <main>
+            <main className="flex-grow">
                 {renderPage()}
             </main>
             <TransactionModal 
@@ -154,6 +249,7 @@ function App() {
                 purchaseDetails={purchaseDetails}
                 onConfirm={handleConfirmPurchase}
             />
+            <Footer />
         </div>
     );
 }

@@ -12,6 +12,7 @@ const ViewTicketModal = ({ ticket, onClose }) => {
         day: 'numeric',
         hour: 'numeric',
         minute: '2-digit',
+        year: 'numeric',
     });
 
     return (

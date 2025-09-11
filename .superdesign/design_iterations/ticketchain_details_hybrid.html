@@ -22,6 +22,37 @@
         .glass-ui { background-color: var(--card); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-md); }
         .y2k-btn { background: linear-gradient(45deg, var(--primary), var(--accent)); color: var(--primary-foreground); border-radius: 9999px; font-weight: 600; text-transform: uppercase; letter-spacing: var(--tracking-normal); box-shadow: 0 0 20px 0 oklch(0.8 0.3 320 / 0.6); transition: all 0.2s ease-out; }
         .y2k-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px 0 oklch(0.8 0.3 320 / 0.8); }
+
+        /* New Complex Arena Seat Map Styles */
+        .arena-container { width: 100%; max-width: 700px; margin: 0 auto; }
+        .stage { width: 40%; margin: 1rem auto 0; padding: 0.5rem; text-align: center; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2em; color: var(--secondary-foreground); background: var(--secondary); border-radius: 0 0 0.5rem 0.5rem; box-shadow: 0 5px 20px var(--secondary); }
+        .seat-section { position: relative; margin-bottom: 1.5rem; }
+        .seat-row { display: flex; justify-content: center; gap: 5px; margin-bottom: 5px; }
+        .seat {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.15s ease-out;
+            background-color: oklch(0.4 0.1 250 / 0.6);
+        }
+        .seat.available:hover { background-color: var(--secondary); transform: scale(1.5); box-shadow: 0 0 10px var(--secondary); }
+        .seat.unavailable { background-color: oklch(0.3 0.01 250); cursor: not-allowed; opacity: 0.3; }
+        .seat.selected { background-color: var(--primary); box-shadow: 0 0 8px var(--primary); transform: scale(1.4); }
+        .aisle-sm { width: 10px; }
+        .aisle-lg { width: 20px; }
+
+        /* Helper for curving rows */
+        .seat-row.curve-sm .seat:nth-child(1), .seat-row.curve-sm .seat:nth-last-child(1) { transform: translateY(6px); }
+        .seat-row.curve-sm .seat:nth-child(2), .seat-row.curve-sm .seat:nth-last-child(2) { transform: translateY(3px); }
+        .seat-row.curve-md .seat:nth-child(1), .seat-row.curve-md .seat:nth-last-child(1) { transform: translateY(10px); }
+        .seat-row.curve-md .seat:nth-child(2), .seat-row.curve-md .seat:nth-last-child(2) { transform: translateY(7px); }
+        .seat-row.curve-md .seat:nth-child(3), .seat-row.curve-md .seat:nth-last-child(3) { transform: translateY(4px); }
+
+        /* Angled side sections */
+        .side-section-left { transform: rotate(15deg); position: absolute; top: 0; left: 0; }
+        .side-section-right { transform: rotate(-15deg); position: absolute; top: 0; right: 0; }
+
     </style>
 </head>
 <body class="antialiased">
@@ -73,8 +104,52 @@
                         <div class="flex items-center gap-4"><button class="p-3 border border-border rounded-full hover:bg-primary/20">-</button><span class="text-2xl font-bold w-8 text-center">1</span><button class="p-3 border border-border rounded-full hover:bg-primary/20">+</button></div>
                     </div>
                     <div id="seatmap-selector" class="hidden">
-                        <label class="font-semibold mb-2 block uppercase text-sm tracking-wider">Select Seats</label>
-                        <div class="aspect-video bg-black/20 rounded-xl flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed border-border"><div class="bg-foreground/80 text-background text-xs font-bold px-4 py-1 rounded-full mb-4">STAGE</div><p>Interactive Seat Map</p></div>
+                        <label class="font-semibold mb-4 block uppercase text-sm tracking-wider">Select Seats</label>
+                        <div class="arena-container glass-ui !bg-black/20 p-4 md:p-6">
+                            <!-- Balcony Section -->
+                            <div class="seat-section h-[150px]">
+                                <div class="side-section-left">
+                                    <div class="seat-row curve-sm"><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                    <div class="seat-row curve-sm"><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                    <div class="seat-row curve-sm"><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                </div>
+                                <div class="absolute inset-0 top-4">
+                                    <div class="seat-row curve-md"><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                    <div class="seat-row curve-md"><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                    <div class="seat-row curve-md"><div class="seat available"></div><div class="seat available"></div><div class="seat unavailable"></div><div class="seat unavailable"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                </div>
+                                <div class="side-section-right">
+                                    <div class="seat-row curve-sm"><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                    <div class="seat-row curve-sm"><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                    <div class="seat-row curve-sm"><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                </div>
+                            </div>
+                            <!-- Mezzanine Section -->
+                            <div class="seat-section h-[120px]">
+                                <div class="side-section-left ml-8 mt-2">
+                                    <div class="seat-row curve-sm"><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                    <div class="seat-row curve-sm"><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                </div>
+                                <div class="absolute inset-0">
+                                    <div class="seat-row curve-md"><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                    <div class="seat-row curve-md"><div class="seat selected"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                    <div class="seat-row curve-md"><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                </div>
+                                <div class="side-section-right mr-8 mt-2">
+                                    <div class="seat-row curve-sm"><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                    <div class="seat-row curve-sm"><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                </div>
+                            </div>
+                             <!-- Orchestra Section -->
+                            <div class="seat-section h-[100px]">
+                                <div class="absolute inset-0">
+                                    <div class="seat-row"><div class="seat available"></div><div class="seat available"></div><div class="aisle-sm"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="aisle-sm"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                    <div class="seat-row"><div class="seat available"></div><div class="seat available"></div><div class="aisle-sm"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="aisle-sm"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                    <div class="seat-row"><div class="seat available"></div><div class="seat available"></div><div class="aisle-sm"></div><div class="seat available"></div><div class="seat available"></div><div class="seat available"></div><div class="aisle-sm"></div><div class="seat available"></div><div class="seat available"></div></div>
+                                </div>
+                            </div>
+                            <div class="stage">Stage</div>
+                        </div>
                     </div>
                     <div class="border-t border-border/50 my-6"></div>
                     <div class="flex justify-between items-center mb-6"><span class="text-muted-foreground uppercase font-semibold">Total</span><span class="text-3xl font-bold text-glow">0.1 ETH</span></div>
@@ -96,6 +171,14 @@
                 const tier = button.dataset.tier;
                 floorSelector.classList.toggle('hidden', tier !== 'floor');
                 seatmapSelector.classList.toggle('hidden', tier === 'floor');
+            });
+        });
+
+        // Seat selection logic
+        const seats = document.querySelectorAll('.seat.available');
+        seats.forEach(seat => {
+            seat.addEventListener('click', () => {
+                seat.classList.toggle('selected');
             });
         });
     </script>

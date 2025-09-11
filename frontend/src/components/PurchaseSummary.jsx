@@ -17,7 +17,7 @@ const PurchaseSummary = ({ totalPrice, onPurchase, walletConnected }) => {
   const isButtonDisabled = !walletConnected || totalPrice === "0";
 
   return (
-    <>
+    <div className='flex flex-col'>
       <div className="border-t border-border/50 my-6"></div>
       <div className="flex justify-between items-center mb-6">
         <span className="text-muted-foreground uppercase font-semibold">Total</span>
@@ -26,11 +26,11 @@ const PurchaseSummary = ({ totalPrice, onPurchase, walletConnected }) => {
       <button 
         onClick={onPurchase}
         disabled={isButtonDisabled}
-        className="y2k-btn w-full py-4 font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        className="y2k-btn w-4/5 py-4 font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed mx-auto"
       >
         {walletConnected ? 'Buy Tickets' : 'Connect Wallet'}
       </button>
-    </>
+    </div>
   );
 };
 

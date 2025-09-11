@@ -4,6 +4,7 @@ import PropTypes from "prop-types";
 const EventCard = ({ event, onSelectEvent }) => {
   const eventDate = new Date(event.date);
   const isPast = eventDate < new Date();
+  const isSoldOut = event.tiers.every(tier => !tier.totalQuantity || tier.sold >= tier.totalQuantity);
 
   const monthAbbr = eventDate
     .toLocaleString("en-US", { month: "short" })
@@ -13,9 +14,9 @@ const EventCard = ({ event, onSelectEvent }) => {
   return (
     <div
       className={`group glass-ui transition-all duration-300 ease-in-out flex flex-col gap-4 ${
-        isPast ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+        isPast || isSoldOut ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
       }`}
-      onClick={() => !isPast && onSelectEvent(event)}
+      onClick={() => !isPast && !isSoldOut && onSelectEvent(event)}
     >
       <div className="p-6 flex flex-col justify-around min-h-[370px]">
         <div className="relative">
@@ -38,8 +39,10 @@ const EventCard = ({ event, onSelectEvent }) => {
           <p className="text-sm font-semibold mt-1">{event.location}</p>
         </div>
 
-        {isPast && (
-          <p className="text-destructive font-bold text-sm mt-2">EVENT ENDED</p>
+        {(isPast || isSoldOut) && (
+          <p className="text-destructive font-bold text-sm mt-2">
+            {isSoldOut ? "SOLD OUT" : "EVENT ENDED"}
+          </p>
         )}
       </div>
     </div>
@@ -53,6 +56,7 @@ EventCard.propTypes = {
     date: PropTypes.string.isRequired,
     image: PropTypes.string.isRequired,
     venue: PropTypes.string.isRequired,
+    tiers: PropTypes.array.isRequired,
   }).isRequired,
   onSelectEvent: PropTypes.func.isRequired,
 };

@@ -24,43 +24,31 @@ const eventLocations = [
   {
     name: "Starlight Amphitheater",
     seating: {
-      "General Admission Flor": 700,
-      "Premium Floor": 500,
-      "Mezzanine 1": 800,
-      "Mezzanine 2": 900,
-      "VIP Box": 100,
-      "General Admission Lawn": 1000,
-    },
-  },
-  {
-    name: "The Velvet Note",
-    seating: {
-      Standard: 150,
-      Balcony: 50,
-    },
-  },
-  {
-    name: "Sector 7G",
-    seating: {
-      "General Admission": 2000,
+      "General Admission Flor": { capacity: 700, type: "standing" },
+      "Premium Floor": { capacity: 500, type: "standing" },
+      "Mezzanine 1": { capacity: 800, type: "seated" },
+      "Mezzanine 2": { capacity: 900, type: "seated" },
+      "VIP Box": { capacity: 100, type: "seated" },
+      "General Admission Lawn": { capacity: 1000, type: "seated" },
     },
   },
   {
     name: "Neo-Kyoto Convention Center",
     seating: {
-      "Workshop Pass": 50,
-      "Auditorium Seat": 300,
+      "Workshop Pass": { capacity: 50, type: "standing" },
+      "Auditorium Seat": { capacity: 300, type: "seated" },
     },
   },
   {
     name: "The Grand Theatre",
     seating: {
-      Orchestra: 400,
-      Mezzanine: 300,
-      Balcony: 250,
+      Orchestra: { capacity: 400, type: "seated" },
+      Mezzanine: { capacity: 300, type: "seated" },
+      Balcony: { capacity: 250, type: "seated" },
     },
   },
 ];
+
 
 // --- 3. Rewrite the Events Section ---
 const eventsToCreate = [
@@ -79,28 +67,13 @@ const eventsToCreate = [
       "VIP Box": "10",
       "General Admission Lawn": "0.5",
     },
-  },
-  {
-    name: "Jazz in the Dark",
-    location: "The Velvet Note",
-    date: "2025-11-15",
-    time: "20:00",
-    category: "show",
-    subcategory: "Jazz",
-    ticketPrices: {
-      Standard: "0.04",
-      Balcony: "0.07",
-    },
-  },
-  {
-    name: "Holografik Beats",
-    location: "Sector 7G",
-    date: "2025-12-31",
-    time: "22:00",
-    category: "show",
-    subcategory: "Electronic",
-    ticketPrices: {
-      "General Admission": "0.1",
+    tierQuantities: {
+      "General Admission Flor": 700,
+      "Premium Floor": 500,
+      "Mezzanine 1": 800,
+      "Mezzanine 2": 2,
+      "VIP Box": 100,
+      "General Admission Lawn": 1000,
     },
   },
   {
@@ -112,6 +85,9 @@ const eventsToCreate = [
     subcategory: "Tech",
     ticketPrices: {
       "Workshop Pass": "0.15",
+    },
+    tierQuantities: {
+      "Workshop Pass": 50,
     },
   },
   {
@@ -125,6 +101,11 @@ const eventsToCreate = [
       Orchestra: "0.06",
       Mezzanine: "0.04",
       Balcony: "0.025",
+    },
+    tierQuantities: {
+      Orchestra: 400,
+      Mezzanine: 300,
+      Balcony: 250,
     },
   },
   {
@@ -142,6 +123,130 @@ const eventsToCreate = [
       "VIP Box": "10",
       "General Admission Lawn": "0.5",
     },
+    tierQuantities: {
+      "General Admission Flor": 700,
+      "Premium Floor": 500,
+      "Mezzanine 1": 800,
+      "Mezzanine 2": 900,
+      "VIP Box": 100,
+      "General Admission Lawn": 1000,
+    },
+  },
+  {
+    name: "Jazz Under the Stars",
+    location: "The Grand Theatre",
+    date: "2026-04-12",
+    time: "19:00",
+    category: "show",
+    subcategory: "Jazz",
+    ticketPrices: {
+      Orchestra: "0.08",
+      Mezzanine: "0.05",
+      Balcony: "0.03",
+    },
+    tierQuantities: {
+      Orchestra: 400,
+      Mezzanine: 300,
+      Balcony: 250,
+    },
+  },
+  {
+    name: "Realms of Steel",
+    location: "Starlight Amphitheater",
+    date: "2026-05-20",
+    time: "18:00",
+    category: "show",
+    subcategory: "Metal",
+    ticketPrices: {
+      "General Admission Flor": "2.5",
+      "Premium Floor": "4",
+      "Mezzanine 1": "1.5",
+      "Mezzanine 2": "1",
+      "VIP Box": "8",
+      "General Admission Lawn": "0.4",
+    },
+    tierQuantities: {
+      "General Admission Flor": 700,
+      "Premium Floor": 500,
+      "Mezzanine 1": 800,
+      "Mezzanine 2": 900,
+      "VIP Box": 100,
+      "General Admission Lawn": 1000,
+    },
+  },
+  {
+    name: "Capturing the Moment: A Photography Workshop",
+    location: "Neo-Kyoto Convention Center",
+    date: "2026-06-15",
+    time: "10:00",
+    category: "workshop",
+    subcategory: "Photography",
+    ticketPrices: {
+      "Workshop Pass": "0.2",
+    },
+    tierQuantities: {
+      "Workshop Pass": 5,
+    },
+  },
+  {
+    name: "Chronicles of Laughter",
+    location: "Neo-Kyoto Convention Center",
+    date: "2026-07-22",
+    time: "20:00",
+    category: "culture",
+    subcategory: "Stand-up",
+    ticketPrices: {
+      "Auditorium Seat": "0.04",
+    },
+    tierQuantities: {
+      "Auditorium Seat": 300,
+    },
+  },
+  {
+    name: "Indie Echoes Fest",
+    location: "The Grand Theatre",
+    date: "2026-08-01",
+    time: "17:00",
+    category: "show",
+    subcategory: "Indie",
+    ticketPrices: {
+      Orchestra: "0.05",
+      Mezzanine: "0.035",
+      Balcony: "0.02",
+    },
+    tierQuantities: {
+      Orchestra: 400,
+      Mezzanine: 300,
+      Balcony: 1,
+    },
+  },
+  {
+    name: "Cybernetic Showdown",
+    location: "Neo-Kyoto Convention Center",
+    date: "2026-09-18",
+    time: "12:00",
+    category: "esports",
+    subcategory: "Tournament",
+    ticketPrices: {
+      "Auditorium Seat": "0.1",
+    },
+    tierQuantities: {
+      "Auditorium Seat": 300,
+    },
+  },
+    {
+    name: "Echoes of the Void",
+    location: "The Grand Theatre",
+    date: "2026-10-31",
+    time: "22:00",
+    category: "show",
+    subcategory: "Electronic",
+    ticketPrices: {
+      "Orchestra": "0.1",
+    },
+    tierQuantities: {
+      "Orchestra": 2,
+    }
   },
 ];
 
@@ -186,7 +291,7 @@ async function main() {
       ethers.parseEther(event.ticketPrices[tier])
     );
     const tierQuantities = tierNames.map(
-      (tier) => locationDetails.seating[tier]
+      (tier) => event.tierQuantities?.[tier] ?? locationDetails.seating[tier].capacity
     );
 
     // Combine date and time and convert to Unix timestamp
