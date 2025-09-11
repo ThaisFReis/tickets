@@ -5,26 +5,32 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
+    struct TicketType {
+        uint256 typeId;
+        string name;
+        uint256 price;
+        uint256 quantity;
+        uint256 sold;
+    }
+
     struct Event {
         uint256 eventId;
         string name;
         uint256 date;
-        uint256 ticketPrice;
-        uint256 totalSupply;
-        uint256 sold;
         address organizer;
-        bool isAssignedSeating;
-        uint256 totalSeats;
+        mapping(uint256 => TicketType) ticketTiers;
+        uint256 nextTypeId;
+        mapping(uint256 => mapping(uint256 => address)) seatOwners; // typeId => seatId => owner
     }
 
     struct Ticket {
         uint256 eventId;
-        uint256 seatId; // 0 for general admission
+        uint256 typeId;
+        uint256 seatId;
     }
 
     mapping(uint256 => Event) public events;
     mapping(uint256 => Ticket) public tickets;
-    mapping(uint256 => mapping(uint256 => bool)) public seatSold; // eventId => seatId => sold
     uint256 public nextEventId = 1;
     uint256 public nextTokenId = 1;
 
@@ -32,17 +38,6 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
         uint256 eventId,
         string name,
         uint256 date,
-        uint256 ticketPrice,
-        uint256 totalSupply,
-        address organizer
-    );
-
-    event EventCreatedWithAssignedSeating(
-        uint256 eventId,
-        string name,
-        uint256 date,
-        uint256 ticketPrice,
-        uint256 totalSeats,
         address organizer
     );
 
@@ -50,6 +45,7 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
         uint256 eventId,
         uint256 tokenId,
         address owner,
+        uint256 typeId,
         uint256 seatId
     );
 
@@ -61,119 +57,145 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
     function createEvent(
         string memory _name,
         uint256 _date,
-        uint256 _ticketPrice,
-        uint256 _totalSupply,
-        bool _isAssignedSeating,
-        uint256 _totalSeats
+        string[] memory _ticketTypeNames,
+        uint256[] memory _ticketTypePrices,
+        uint256[] memory _ticketTypeQuantities
     ) public onlyOwner {
         require(_date > block.timestamp, "Event date must be in the future");
-        require(_ticketPrice > 0, "Ticket price must be greater than 0");
+        require(_ticketTypeNames.length == _ticketTypePrices.length, "Array lengths must match");
+        require(_ticketTypeNames.length == _ticketTypeQuantities.length, "Array lengths must match");
 
-        if (_isAssignedSeating) {
-            require(_totalSeats > 0, "Total seats must be greater than 0");
-            events[nextEventId] = Event(
-                nextEventId,
-                _name,
-                _date,
-                _ticketPrice,
-                _totalSeats,
-                0,
-                msg.sender,
-                true,
-                _totalSeats
-            );
-            emit EventCreatedWithAssignedSeating(
-                nextEventId,
-                _name,
-                _date,
-                _ticketPrice,
-                _totalSeats,
-                msg.sender
-            );
-        } else {
-            require(_totalSupply > 0, "Total supply must be greater than 0");
-            events[nextEventId] = Event(
-                nextEventId,
-                _name,
-                _date,
-                _ticketPrice,
-                _totalSupply,
-                0,
-                msg.sender,
-                false,
+        Event storage newEvent = events[nextEventId];
+        newEvent.eventId = nextEventId;
+        newEvent.name = _name;
+        newEvent.date = _date;
+        newEvent.organizer = msg.sender;
+        newEvent.nextTypeId = 1;
+
+        for (uint256 i = 0; i < _ticketTypeNames.length; i++) {
+            require(_ticketTypePrices[i] > 0, "Price must be greater than 0");
+            require(_ticketTypeQuantities[i] > 0, "Quantity must be greater than 0");
+            
+            uint256 typeId = newEvent.nextTypeId;
+            newEvent.ticketTiers[typeId] = TicketType(
+                typeId,
+                _ticketTypeNames[i],
+                _ticketTypePrices[i],
+                _ticketTypeQuantities[i],
                 0
             );
-            emit EventCreated(
-                nextEventId,
-                _name,
-                _date,
-                _ticketPrice,
-                _totalSupply,
-                msg.sender
-            );
+            newEvent.nextTypeId++;
         }
+
+        emit EventCreated(nextEventId, _name, _date, msg.sender);
         nextEventId++;
     }
 
-    function buyTicket(uint256 _eventId, uint256 _seatId) public payable {
+    function buyTicket(
+        uint256 _eventId,
+        uint256 _typeId,
+        uint256[] memory _seatIds
+    ) public payable {
         require(_eventId > 0 && _eventId < nextEventId, "Event not found");
         Event storage currentEvent = events[_eventId];
+        TicketType storage ticketTier = currentEvent.ticketTiers[_typeId];
+
+        require(block.timestamp < currentEvent.date, "Event has already passed");
+        require(ticketTier.price > 0, "Invalid ticket tier"); // Check if tier exists
+
+        uint256 totalCost = ticketTier.price * _seatIds.length;
+        require(msg.value >= totalCost, "Insufficient payment");
 
         require(
-            block.timestamp < currentEvent.date,
-            "Event has already passed"
+            ticketTier.sold + _seatIds.length <= ticketTier.quantity,
+            "Not enough tickets available for this tier"
         );
-        require(msg.value >= currentEvent.ticketPrice, "Insufficient payment");
 
-        if (currentEvent.isAssignedSeating) {
+        for (uint256 i = 0; i < _seatIds.length; i++) {
+            uint256 seatId = _seatIds[i];
             require(
-                _seatId > 0 && _seatId <= currentEvent.totalSeats,
-                "Invalid seat ID"
+                currentEvent.seatOwners[_typeId][seatId] == address(0),
+                "Seat is already sold"
             );
-            require(!seatSold[_eventId][_seatId], "Seat is already sold");
 
-            seatSold[_eventId][_seatId] = true;
-            tickets[nextTokenId] = Ticket(_eventId, _seatId);
+            currentEvent.seatOwners[_typeId][seatId] = msg.sender;
+            tickets[nextTokenId] = Ticket(_eventId, _typeId, seatId);
             _safeMint(msg.sender, nextTokenId);
-            emit TicketPurchased(_eventId, nextTokenId, msg.sender, _seatId);
-        } else {
-            require(
-                currentEvent.sold < currentEvent.totalSupply,
-                "Event is sold out"
+            emit TicketPurchased(
+                _eventId,
+                nextTokenId,
+                msg.sender,
+                _typeId,
+                seatId
             );
-            tickets[nextTokenId] = Ticket(_eventId, 0);
-            _safeMint(msg.sender, nextTokenId);
-            emit TicketPurchased(_eventId, nextTokenId, msg.sender, 0);
+            nextTokenId++;
         }
 
-        currentEvent.sold++;
-        nextTokenId++;
+        ticketTier.sold += _seatIds.length;
+    }
+
+    function purchaseTickets(
+        uint256 _eventId,
+        uint256 _typeId,
+        uint256 _quantity
+    ) public payable {
+        require(_eventId > 0 && _eventId < nextEventId, "Event not found");
+        Event storage currentEvent = events[_eventId];
+        TicketType storage ticketTier = currentEvent.ticketTiers[_typeId];
+
+        require(block.timestamp < currentEvent.date, "Event has already passed");
+        require(ticketTier.price > 0, "Invalid ticket tier");
+
+        uint256 totalCost = ticketTier.price * _quantity;
+        require(msg.value >= totalCost, "Insufficient payment");
+
+        require(
+            ticketTier.sold + _quantity <= ticketTier.quantity,
+            "Not enough tickets available for this tier"
+        );
+
+        for (uint256 i = 0; i < _quantity; i++) {
+            // For non-seated tickets, seatId can be 0 or tracked differently
+            uint256 seatId = 0; 
+            tickets[nextTokenId] = Ticket(_eventId, _typeId, seatId);
+            _safeMint(msg.sender, nextTokenId);
+            emit TicketPurchased(
+                _eventId,
+                nextTokenId,
+                msg.sender,
+                _typeId,
+                seatId
+            );
+            nextTokenId++;
+        }
+
+        ticketTier.sold += _quantity;
     }
 
     function getEventDetails(
         uint256 _eventId
-    ) public view returns (Event memory) {
+    ) public view returns (string memory name, uint256 date, address organizer) {
         require(_eventId > 0 && _eventId < nextEventId, "Event not found");
-        return events[_eventId];
+        Event storage currentEvent = events[_eventId];
+        return (currentEvent.name, currentEvent.date, currentEvent.organizer);
     }
 
-    function isSeatSold(
+    function getTicketTier(
         uint256 _eventId,
-        uint256 _seatId
-    ) public view returns (bool) {
+        uint256 _typeId
+    ) public view returns (TicketType memory) {
         require(_eventId > 0 && _eventId < nextEventId, "Event not found");
-        return seatSold[_eventId][_seatId];
+        require(_typeId > 0 && _typeId < events[_eventId].nextTypeId, "Tier not found");
+        return events[_eventId].ticketTiers[_typeId];
     }
 
-    function getAllEvents() public view returns (Event[] memory) {
-        uint256 eventCount = nextEventId - 1;
-        Event[] memory allEvents = new Event[](eventCount);
-        // O loop começa em 1 porque os IDs dos eventos começam em 1
-        for (uint256 i = 1; i <= eventCount; i++) {
-            // CORREÇÃO: Usar i-1 para preencher o array desde o índice 0
-            allEvents[i - 1] = events[i];
-        }
-        return allEvents;
+    function getSeatOwner(
+        uint256 _eventId,
+        uint256 _typeId,
+        uint256 _seatId
+    ) public view returns (address) {
+        require(_eventId > 0 && _eventId < nextEventId, "Event not found");
+        return events[_eventId].seatOwners[_typeId][_seatId];
     }
 
     function getTicketsOfOwner(
@@ -185,6 +207,16 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
             tokenIds[i] = tokenOfOwnerByIndex(_owner, i);
         }
         return tokenIds;
+    }
+
+    function getTicketDetails(
+        uint256 _tokenId
+    ) public view returns (uint256 eventId, string memory tierName, uint256 seatId) {
+        require(ownerOf(_tokenId) != address(0), "Ticket does not exist");
+        Ticket memory ticket = tickets[_tokenId];
+        Event storage currentEvent = events[ticket.eventId];
+        TicketType storage ticketTier = currentEvent.ticketTiers[ticket.typeId];
+        return (ticket.eventId, ticketTier.name, ticket.seatId);
     }
 
     // The following functions are overrides required by Solidity.

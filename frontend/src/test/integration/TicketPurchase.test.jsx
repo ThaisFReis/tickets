@@ -1,47 +1,62 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import App from '../../App'; // Using App as the main orchestrator
+import PurchaseFlow from '../../components/PurchaseFlow'; // Test the flow directly
 import * as EthersService from '../../services/ethers';
 
 // Mock the ethers service
 vi.mock('../../services/ethers');
 
-describe('Ticket Purchase Integration Test', () => {
-  it('handles the purchase of a general admission ticket', async () => {
-    const mockGAEvent = {
-        eventId: 1n,
-        name: 'GA Rock Fest',
-        date: BigInt(Math.floor(Date.now() / 1000) + 7200),
-        ticketPrice: 100000000000000000n,
-        isAssignedSeating: false,
-        totalSupply: 100n,
-    };
-
-    const mockContract = {
-      getAllEvents: vi.fn().mockResolvedValue([mockGAEvent]),
-      buyTicket: vi.fn().mockResolvedValue({
-        wait: () => Promise.resolve(), // Mock the wait() function for the transaction
-      }),
-    };
-
-    EthersService.getContract.mockResolvedValue(mockContract);
-
-    render(<App />);
-
-    // Wait for the event to be displayed
-    await waitFor(() => {
-      expect(screen.getByText('GA Rock Fest')).toBeInTheDocument();
+describe('Multi-Step Ticket Purchase Integration Test', () => {
+  it('allows a user to complete the full purchase flow', async () => {
+    // Mock the buyTicket function to simulate a successful transaction
+    EthersService.buyTicket.mockResolvedValue({
+      wait: () => Promise.resolve(),
     });
 
-    // Simulate clicking the "Buy Ticket" button
-    const buyButton = screen.getByRole('button', { name: /buy ticket/i });
-    fireEvent.click(buyButton);
+    const mockEvent = { eventId: 1 }; // Pass a mock eventId
 
-    // Wait for the transaction to be "confirmed" and check the result
+    render(<PurchaseFlow eventData={mockEvent} />);
+
+    // Step 1: Select Ticket Type
+    // The component uses mock data, so we can directly interact with it.
+    const vipSelectButton = screen.getByRole('button', { name: /Select VIP/i });
+    fireEvent.click(vipSelectButton);
+
+    // Step 2: Select Quantity
+    const incrementButton = screen.getByRole('button', { name: '+' });
+    fireEvent.click(incrementButton); // Increase quantity to 2
+    const nextButton = screen.getByRole('button', { name: /Next/i });
+    fireEvent.click(nextButton);
+
+    // Step 3: Select Seats
+    const seat1 = screen.getByText('VIPA-1');
+    const seat2 = screen.getByText('VIPA-2');
+    fireEvent.click(seat1);
+    fireEvent.click(seat2);
+    const confirmSeatsButton = screen.getByRole('button', { name: /Confirm Seats/i });
+    fireEvent.click(confirmSeatsButton);
+
+    // Step 4: Confirm Purchase
+    // Verify the summary is correct
+    expect(screen.getByText('VIP')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getByText('101, 102')).toBeInTheDocument();
+    expect(screen.getByText('1 ETH')).toBeInTheDocument(); // 2 * 0.5
+
+    // Click the final confirm button
+    const confirmPurchaseButton = screen.getByRole('button', { name: /Confirm Purchase/i });
+    fireEvent.click(confirmPurchaseButton);
+
+    // Wait for the purchase to complete and check for success message
     await waitFor(() => {
-      expect(mockContract.buyTicket).toHaveBeenCalledWith(1n, 0, { value: mockGAEvent.ticketPrice });
+      expect(EthersService.buyTicket).toHaveBeenCalledWith(
+        1,      // eventId
+        1,      // typeId for VIP
+        [101, 102], // seatIds
+        '1'     // totalPrice
+      );
     });
-    
-    expect(screen.getByText(/ticket purchased successfully/i)).toBeInTheDocument();
+
+    expect(screen.getByText('Purchase Successful!')).toBeInTheDocument();
   });
 });

@@ -234,67 +234,12 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "ticketPrice",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "totalSupply",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
         "internalType": "address",
         "name": "organizer",
         "type": "address"
       }
     ],
     "name": "EventCreated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "eventId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "name",
-        "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "date",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "ticketPrice",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "totalSeats",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "organizer",
-        "type": "address"
-      }
-    ],
-    "name": "EventCreatedWithAssignedSeating",
     "type": "event"
   },
   {
@@ -336,6 +281,12 @@
         "internalType": "address",
         "name": "owner",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "typeId",
+        "type": "uint256"
       },
       {
         "indexed": false,
@@ -418,8 +369,13 @@
       },
       {
         "internalType": "uint256",
-        "name": "_seatId",
+        "name": "_typeId",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_seatIds",
+        "type": "uint256[]"
       }
     ],
     "name": "buyTicket",
@@ -440,24 +396,19 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "_ticketPrice",
-        "type": "uint256"
+        "internalType": "string[]",
+        "name": "_ticketTypeNames",
+        "type": "string[]"
       },
       {
-        "internalType": "uint256",
-        "name": "_totalSupply",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "_ticketTypePrices",
+        "type": "uint256[]"
       },
       {
-        "internalType": "bool",
-        "name": "_isAssignedSeating",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_totalSeats",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "_ticketTypeQuantities",
+        "type": "uint256[]"
       }
     ],
     "name": "createEvent",
@@ -491,94 +442,14 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "ticketPrice",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "totalSupply",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "sold",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
         "name": "organizer",
         "type": "address"
       },
       {
-        "internalType": "bool",
-        "name": "isAssignedSeating",
-        "type": "bool"
-      },
-      {
         "internalType": "uint256",
-        "name": "totalSeats",
+        "name": "nextTypeId",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getAllEvents",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "eventId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "date",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "ticketPrice",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "totalSupply",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "sold",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "organizer",
-            "type": "address"
-          },
-          {
-            "internalType": "bool",
-            "name": "isAssignedSeating",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint256",
-            "name": "totalSeats",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct ConcertTicketMarketplace.Event[]",
-        "name": "",
-        "type": "tuple[]"
       }
     ],
     "stateMutability": "view",
@@ -614,10 +485,102 @@
     "name": "getEventDetails",
     "outputs": [
       {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "date",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "organizer",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_eventId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_typeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_seatId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSeatOwner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTicketDetails",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "eventId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "tierName",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "seatId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_eventId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_typeId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTicketTier",
+    "outputs": [
+      {
         "components": [
           {
             "internalType": "uint256",
-            "name": "eventId",
+            "name": "typeId",
             "type": "uint256"
           },
           {
@@ -627,41 +590,21 @@
           },
           {
             "internalType": "uint256",
-            "name": "date",
+            "name": "price",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "ticketPrice",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "totalSupply",
+            "name": "quantity",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
             "name": "sold",
             "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "organizer",
-            "type": "address"
-          },
-          {
-            "internalType": "bool",
-            "name": "isAssignedSeating",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint256",
-            "name": "totalSeats",
-            "type": "uint256"
           }
         ],
-        "internalType": "struct ConcertTicketMarketplace.Event",
+        "internalType": "struct ConcertTicketMarketplace.TicketType",
         "name": "",
         "type": "tuple"
       }
@@ -702,30 +645,6 @@
       }
     ],
     "name": "isApprovedForAll",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_eventId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_seatId",
-        "type": "uint256"
-      }
-    ],
-    "name": "isSeatSold",
     "outputs": [
       {
         "internalType": "bool",
@@ -808,6 +727,29 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_eventId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_typeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_quantity",
+        "type": "uint256"
+      }
+    ],
+    "name": "purchaseTickets",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "renounceOwnership",
     "outputs": [],
@@ -863,30 +805,6 @@
     "name": "safeTransferFrom",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "seatSold",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -952,6 +870,11 @@
       {
         "internalType": "uint256",
         "name": "eventId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "typeId",
         "type": "uint256"
       },
       {

@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { getContract } from '../services/ethers';
-import { ethers } from 'ethers';
+import { fetchAllEvents } from '../services/ethers';
+import PurchaseFlow from './PurchaseFlow'; // Import the new component
 
 const ConcertList = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [purchaseStatus, setPurchaseStatus] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const contract = await getContract();
-        const allEvents = await contract.getAllEvents();
+        const allEvents = await fetchAllEvents();
         setEvents(allEvents);
       } catch (error) {
         console.error("Error fetching events:", error);
@@ -23,39 +22,35 @@ const ConcertList = () => {
     fetchEvents();
   }, []);
 
-  const handleBuyTicket = async (eventId) => {
-    setPurchaseStatus('Purchasing...');
-    try {
-      const contract = await getContract(true); // Get contract with signer
-      const event = events.find(e => e.eventId === eventId);
-      const tx = await contract.buyTicket(eventId, 0, { value: event.ticketPrice });
-      await tx.wait();
-      setPurchaseStatus('Ticket purchased successfully!');
-    } catch (error) {
-      console.error("Error purchasing ticket:", error);
-      setPurchaseStatus('Purchase failed.');
-    }
-  };
-
   if (loading) {
     return <div>Loading events...</div>;
   }
 
+  if (selectedEvent) {
+    return (
+      <div>
+        <button onClick={() => setSelectedEvent(null)} className="mb-4 px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded text-white font-bold">
+          &larr; Back to Events
+        </button>
+        <PurchaseFlow eventData={selectedEvent} />
+      </div>
+    );
+  }
+
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Upcoming Concerts</h2>
-      {purchaseStatus && <p className="mb-4 text-green-400">{purchaseStatus}</p>}
-      <ul className="space-y-4">
+      <h2 className="text-2xl font-bold mb-4 text-text-primary">Upcoming Concerts</h2>
+      <ul className="space-y-6">
         {events.map((event) => (
-          <li key={Number(event.eventId)} className="p-4 bg-gray-700 rounded-lg">
-            <h3 className="text-xl font-semibold">{event.name}</h3>
-            <p>Date: {new Date(Number(event.date) * 1000).toLocaleDateString()}</p>
-            <p>Price: {ethers.formatEther(event.ticketPrice)} ETH</p>
+          <li key={Number(event.eventId)} className="bg-surface border border-border rounded-lg p-4 transition-shadow hover:shadow-glow">
+            <h3 className="text-xl font-bold text-text-primary">{event.name}</h3>
+            <p className="text-sm text-text-secondary">Date: {new Date(Number(event.date) * 1000).toLocaleDateString()}</p>
+            {/* Price info will now be inside the purchase flow */}
             <button
-              onClick={() => handleBuyTicket(event.eventId)}
-              className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded text-white font-bold"
+              onClick={() => setSelectedEvent(event)}
+              className="mt-4 btn-primary"
             >
-              Buy Ticket
+              View Tickets
             </button>
           </li>
         ))}
@@ -65,3 +60,4 @@ const ConcertList = () => {
 };
 
 export default ConcertList;
+;
