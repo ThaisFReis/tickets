@@ -33,7 +33,7 @@ const TransactionModal = ({
         return (
           <div className="p-10 text-center">
             <div className="flex h-fit w-full gap-2 items-center justify-center mb-6">
-              <HelpCircle asChild className="w-8 h-8 text-primary-foreground" />
+              <HelpCircle className="w-8 h-8 text-primary-foreground" />
               <h3 className="text-2xl font-bold uppercase text-primary-foreground">
                 Confirm Purchase
               </h3>
@@ -80,7 +80,7 @@ const TransactionModal = ({
         return (
           <div className="p-8 text-center">
             <div className="w-16 h-16 rounded-full bg-primary/20 p-1 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle2 asChild className="w-14 h-14 text-primary" />
+              <CheckCircle2 className="w-14 h-14 text-primary" />
             </div>
             <h3 className="mb-5 text-2xl font-bold uppercase">Success!</h3>
             <p className="mb-6 text-md text-muted-foreground">
@@ -98,7 +98,7 @@ const TransactionModal = ({
         return (
           <div className="p-8 text-center">
             <div className="w-16 h-16 rounded-full bg-destructive/20 p-1 flex items-center justify-center mx-auto mb-4">
-              <XCircle asChild className="w-14 h-14 text-destructive" />
+              <XCircle className="w-14 h-14 text-destructive" />
             </div>
             <h3 className="mb-5 text-2xl font-bold uppercase">Transaction Failed</h3>
             <p className="mb-6 text-md text-muted-foreground">

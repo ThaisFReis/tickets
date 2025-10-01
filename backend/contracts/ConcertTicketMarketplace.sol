@@ -140,11 +140,15 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
         uint256 _quantity
     ) public payable {
         require(_eventId > 0 && _eventId < nextEventId, "Event not found");
+        require(_quantity > 0, "Quantity must be greater than 0");
+        require(_quantity <= 10, "Maximum 10 tickets per transaction");
+        
         Event storage currentEvent = events[_eventId];
+        require(_typeId > 0 && _typeId < currentEvent.nextTypeId, "Invalid ticket tier");
+        
         TicketType storage ticketTier = currentEvent.ticketTiers[_typeId];
-
+        require(ticketTier.price > 0, "Ticket tier does not exist");
         require(block.timestamp < currentEvent.date, "Event has already passed");
-        require(ticketTier.price > 0, "Invalid ticket tier");
 
         uint256 totalCost = ticketTier.price * _quantity;
         require(msg.value >= totalCost, "Insufficient payment");
@@ -154,9 +158,12 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
             "Not enough tickets available for this tier"
         );
 
+        // Update sold count first to prevent reentrancy issues
+        ticketTier.sold += _quantity;
+
         for (uint256 i = 0; i < _quantity; i++) {
-            // For non-seated tickets, seatId can be 0 or tracked differently
-            uint256 seatId = 0; 
+            // For general admission tickets, use sequential seat numbering
+            uint256 seatId = ticketTier.sold - _quantity + i + 1;
             tickets[nextTokenId] = Ticket(_eventId, _typeId, seatId);
             _safeMint(msg.sender, nextTokenId);
             emit TicketPurchased(
@@ -169,7 +176,10 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
             nextTokenId++;
         }
 
-        ticketTier.sold += _quantity;
+        // Refund excess payment if any
+        if (msg.value > totalCost) {
+            payable(msg.sender).transfer(msg.value - totalCost);
+        }
     }
 
     function getEventDetails(
@@ -186,7 +196,9 @@ contract ConcertTicketMarketplace is ERC721Enumerable, Ownable {
     ) public view returns (TicketType memory) {
         require(_eventId > 0 && _eventId < nextEventId, "Event not found");
         require(_typeId > 0 && _typeId < events[_eventId].nextTypeId, "Tier not found");
-        return events[_eventId].ticketTiers[_typeId];
+        TicketType memory tier = events[_eventId].ticketTiers[_typeId];
+        require(tier.price > 0, "Tier does not exist");
+        return tier;
     }
 
     function getSeatOwner(

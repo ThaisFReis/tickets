@@ -9,8 +9,12 @@ if (window.ethereum) {
   provider = new ethers.BrowserProvider(window.ethereum);
 } else {
   console.error("Please install MetaMask!");
-  provider = new ethers.JsonRpcProvider("http://localhost:8545");
+  // Base Sepolia RPC endpoint as fallback
+  provider = new ethers.JsonRpcProvider("https://sepolia.base.org");
 }
+
+const BASE_SEPOLIA_CHAIN_ID = "0x7a69"; // 31337 in hex (Hardhat local network)
+const BASE_SEPOLIA_RPC = "http://127.0.0.1:8545"; // Local Hardhat network
 
 const getSigner = async () => {
   if (!window.ethereum) {
@@ -20,15 +24,72 @@ const getSigner = async () => {
   return signer;
 };
 
+const checkAndSwitchNetwork = async () => {
+  if (!window.ethereum) {
+    console.warn("MetaMask not detected, using fallback provider");
+    return;
+  }
+
+  try {
+    const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+    console.log("Current chain ID:", currentChainId);
+    console.log("Expected chain ID:", BASE_SEPOLIA_CHAIN_ID);
+    
+    if (currentChainId !== BASE_SEPOLIA_CHAIN_ID) {
+      console.log("Wrong network detected, attempting to switch to Hardhat local network...");
+      
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: BASE_SEPOLIA_CHAIN_ID }],
+        });
+        console.log("Successfully switched to Base Sepolia");
+      } catch (switchError) {
+        // This error code indicates that the chain has not been added to MetaMask
+        if (switchError.code === 4902) {
+          console.log("Base Sepolia not added to MetaMask, attempting to add...");
+          try {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: BASE_SEPOLIA_CHAIN_ID,
+                chainName: 'Hardhat Local',
+                nativeCurrency: {
+                  name: 'ETH',
+                  symbol: 'ETH',
+                  decimals: 18,
+                },
+                rpcUrls: [BASE_SEPOLIA_RPC],
+                blockExplorerUrls: ['http://localhost:8545/'],
+              }],
+            });
+            console.log("Successfully added and switched to Hardhat Local");
+          } catch (addError) {
+            console.error("Failed to add Base Sepolia network:", addError);
+          }
+        } else {
+          console.error("Failed to switch network:", switchError);
+        }
+      }
+    } else {
+      console.log("Already connected to Hardhat Local");
+    }
+  } catch (error) {
+    console.error("Error checking network:", error);
+  }
+};
+
 const getContract = async (withSigner = false) => {
   try {
+    // Check network before creating contract
+    await checkAndSwitchNetwork();
+    
     if (withSigner) {
       const signer = await getSigner();
       return new ethers.Contract(contractAddress.address, contractAbi, signer);
     }
-    // AGORA CORRETO:
-    // Não criamos mais um provedor local. Usamos o principal.
-    return new ethers.Contract(contractAddress.address, contractAbi, provider); // Usando o provedor global correto
+    // Use the global provider
+    return new ethers.Contract(contractAddress.address, contractAbi, provider);
   } catch (error) {
     console.error("Error getting contract:", error);
     throw error;
@@ -59,22 +120,200 @@ const createEvent = async (
   }
 };
 
-const purchaseTickets = async (eventId, tier, quantity, totalPrice) => {
+const purchaseTickets = async (eventId, tier, quantity, totalPriceWei) => {
   try {
     const contract = await getContract(true);
 
-    if (!tier || !tier.tierId) {
-      throw new Error(`Invalid tier object provided for event ${eventId}`);
+    // Handle both tier object and direct tierId
+    let tierId;
+    if (typeof tier === 'object' && tier.tierId) {
+      tierId = tier.tierId;
+    } else if (typeof tier === 'number') {
+      tierId = tier;
+    } else {
+      throw new Error(`Invalid tier provided for event ${eventId}. Expected tier object with tierId or number.`);
     }
-    const tierId = tier.tierId;
 
+    console.log('Purchase parameters:', {
+      eventId,
+      tierId,
+      quantity,
+      totalPriceWei
+    });
+
+    // First, let's validate the contract state
+    try {
+      console.log('Validating contract state...');
+      
+      // Check if event exists
+      const eventCount = await contract.nextEventId();
+      console.log('Next event ID from contract:', eventCount.toString());
+      
+      if (eventId >= Number(eventCount)) {
+        throw new Error(`Event ${eventId} does not exist. Latest event ID is ${Number(eventCount) - 1}`);
+      }
+
+      // Get event details
+      const eventDetails = await contract.getEventDetails(eventId);
+      console.log('Event details:', eventDetails);
+      
+      // Check event date validation - this might be the issue
+      const eventDate = Number(eventDetails[1]); // eventDetails[1] is the date
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      
+      // Get the actual blockchain timestamp
+      const latestBlock = await provider.getBlock('latest');
+      const blockTimestamp = latestBlock.timestamp;
+      
+      console.log('Event date (timestamp):', eventDate);
+      console.log('Current timestamp (local):', currentTimestamp);
+      console.log('Block timestamp (blockchain):', blockTimestamp);
+      console.log('Event is in the future (local check):', eventDate > currentTimestamp);
+      console.log('Event is in the future (blockchain check):', eventDate > blockTimestamp);
+      
+      if (eventDate <= blockTimestamp) {
+        throw new Error(`Event has already passed according to blockchain time. Event date: ${new Date(eventDate * 1000).toISOString()}, Block time: ${new Date(blockTimestamp * 1000).toISOString()}`);
+      }
+
+      // Check if tier exists
+      try {
+        const tierDetails = await contract.getTicketTier(eventId, tierId);
+        console.log('Tier details:', tierDetails);
+        
+        // Validate tier availability - Convert BigInt to Number for comparison
+        const soldCount = Number(tierDetails.sold);
+        const totalQuantity = Number(tierDetails.quantity);
+        
+        console.log('Tier validation:', {
+          tierId,
+          soldCount,
+          totalQuantity,
+          requestedQuantity: quantity,
+          available: totalQuantity - soldCount
+        });
+        
+        if (soldCount >= totalQuantity) {
+          throw new Error(`Tier ${tierId} is sold out`);
+        }
+        
+        if (soldCount + quantity > totalQuantity) {
+          throw new Error(`Not enough tickets available. Only ${totalQuantity - soldCount} tickets left`);
+        }
+        
+        // Validate price - Handle BigInt arithmetic properly
+        const expectedPrice = tierDetails.price * BigInt(quantity);
+        console.log('Price validation:', {
+          tierPrice: tierDetails.price.toString(),
+          quantity,
+          expectedPrice: expectedPrice.toString(),
+          providedPrice: totalPriceWei,
+          sufficient: BigInt(totalPriceWei) >= expectedPrice
+        });
+        
+        if (BigInt(totalPriceWei) < expectedPrice) {
+          throw new Error(`Insufficient payment. Expected: ${expectedPrice.toString()} wei, provided: ${totalPriceWei} wei`);
+        }
+        
+      } catch (tierError) {
+        if (tierError.message.includes('Tier not found')) {
+          throw new Error(`Tier ${tierId} does not exist for event ${eventId}`);
+        }
+        throw tierError;
+      }
+
+    } catch (validationError) {
+      console.error('Contract state validation failed:', validationError);
+      throw validationError;
+    }
+
+    // Try a static call first to get the actual revert reason
+    try {
+      console.log('Trying static call to get revert reason...');
+      await contract.purchaseTickets.staticCall(
+        eventId,
+        tierId,
+        quantity,
+        { value: totalPriceWei }
+      );
+      console.log('Static call successful - transaction should work');
+    } catch (staticError) {
+      console.error('Static call failed:', staticError);
+      
+      // Try to extract more meaningful error from static call
+      if (staticError.reason) {
+        throw new Error(`Contract validation failed: ${staticError.reason}`);
+      }
+      if (staticError.message.includes('Event not found')) {
+        throw new Error(`Event ${eventId} does not exist`);
+      }
+      if (staticError.message.includes('Invalid ticket tier')) {
+        throw new Error(`Ticket tier ${tierId} does not exist for event ${eventId}`);
+      }
+      if (staticError.message.includes('Event has already passed')) {
+        throw new Error('Event has already passed');
+      }
+      if (staticError.message.includes('Insufficient payment')) {
+        throw new Error('Insufficient payment amount');
+      }
+      if (staticError.message.includes('Not enough tickets available')) {
+        throw new Error('Not enough tickets available for purchase');
+      }
+      
+      throw new Error(`Transaction would fail: ${staticError.message}`);
+    }
+
+    // Estimate gas first to catch any contract-level issues
+    try {
+      console.log('Estimating gas for purchase with params:', {
+        eventId,
+        tierId,
+        quantity,
+        value: totalPriceWei
+      });
+      
+      const gasEstimate = await contract.purchaseTickets.estimateGas(
+        eventId,
+        tierId,
+        quantity,
+        { value: totalPriceWei }
+      );
+      console.log('Gas estimate successful:', gasEstimate.toString());
+    } catch (estimateError) {
+      console.error('Gas estimation failed:', estimateError);
+      
+      // Provide more specific error messages based on common failure reasons
+      if (estimateError.message.includes('Event not found')) {
+        throw new Error(`Event ${eventId} does not exist`);
+      }
+      if (estimateError.message.includes('Invalid ticket tier')) {
+        throw new Error(`Ticket tier ${tierId} does not exist for event ${eventId}`);
+      }
+      if (estimateError.message.includes('Insufficient payment')) {
+        throw new Error('Insufficient payment amount');
+      }
+      if (estimateError.message.includes('Not enough tickets available')) {
+        throw new Error('Not enough tickets available for purchase');
+      }
+      if (estimateError.message.includes('Event has already passed')) {
+        throw new Error('Event has already passed');
+      }
+      
+      throw new Error(`Transaction validation failed: ${estimateError.message}`);
+    }
+
+    console.log('Attempting transaction with explicit gas limit...');
     const transaction = await contract.purchaseTickets(
       eventId,
       tierId,
       quantity,
-      { value: totalPrice }
+      {
+        value: totalPriceWei,
+        gasLimit: 300000 // Explicit gas limit to bypass estimation issues
+      }
     );
+    console.log('Transaction sent:', transaction.hash);
     const receipt = await transaction.wait();
+    console.log('Transaction confirmed:', receipt);
     return receipt;
   } catch (error) {
     console.error("Error buying ticket:", error);
@@ -83,10 +322,20 @@ const purchaseTickets = async (eventId, tier, quantity, totalPrice) => {
 };
 const fetchAllEvents = async () => {
   try {
+    // Check network first
+    await checkAndSwitchNetwork();
+    
     // Log 1: Verificando se o objeto do contrato foi criado
     const contract = await getContract();
     console.log("1. Objeto do Contrato criado:", contract);
     console.log("Endereço do contrato que está sendo chamado:", contract.target);
+
+    // Log current network info
+    if (window.ethereum) {
+      const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+      console.log("Current network chain ID:", currentChainId);
+      console.log("Expected Hardhat Local chain ID:", BASE_SEPOLIA_CHAIN_ID);
+    }
 
     // Log 2: Tentando chamar a primeira função do contrato
     console.log("2. Chamando a função 'nextEventId' no contrato...");
@@ -115,8 +364,17 @@ const fetchAllEvents = async () => {
     return events;
   } catch (error) {
     console.error("Error fetching all events:", error);
-    // Log de erro extra para ter certeza
     console.log("Ocorreu um erro DENTRO da função fetchAllEvents.");
+    
+    // Additional debugging info
+    if (error.code === 'BAD_DATA') {
+      console.error("BAD_DATA error detected. This usually means:");
+      console.error("1. Contract not deployed on current network");
+      console.error("2. Wrong contract address");
+      console.error("3. Contract function doesn't exist");
+      console.error("4. Network connection issues");
+    }
+    
     throw error;
   }
 };
@@ -317,4 +575,5 @@ export {
   isSeatSold,
   getOwnerOfTicket,
   getTokenURI,
+  checkAndSwitchNetwork,
 };

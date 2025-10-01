@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import TicketTypeSelector from './TicketTypeSelector';
 import QuantitySelector from './QuantitySelector';
 import VenueMap from './VenueMap';
-import { buyTicket } from '../services/ethers';
+import { purchaseTickets, getEventTiers } from '../services/ethers';
 import PurchaseSummary from './PurchaseSummary';
 
 const PurchaseFlow = ({ eventData }) => {
   const [purchaseState, setPurchaseState] = useState({
     step: 1, // 1: Select Type, 2: Select Quantity, 3: Select Seats, 4: Confirm
+    selectedTier: null, // Store the full tier object
     selectedTierId: null,
     selectedTierName: '',
     selectedTierPrice: '0',
@@ -20,10 +21,40 @@ const PurchaseFlow = ({ eventData }) => {
     purchaseSuccess: false,
   });
 
-  // Dummy data for now - this will be replaced with real contract data
-  const mockTiers = [
-      { typeId: 1, name: 'VIP', price: '0.5', quantity: 50, sold: 10 },
-      { typeId: 2, name: 'General Admission', price: '0.2', quantity: 200, sold: 75 },
+  const [realTiers, setRealTiers] = useState([]);
+  const [isLoadingTiers, setIsLoadingTiers] = useState(true);
+  const [tierError, setTierError] = useState(null);
+
+  // Load real tier data from contract
+  useEffect(() => {
+    const loadTiers = async () => {
+      // Use eventId from eventData, or fallback to 1 if not provided
+      const eventId = eventData?.eventId || 1;
+      
+      try {
+        setIsLoadingTiers(true);
+        setTierError(null);
+        console.log('Loading tiers for event:', eventId);
+        
+        const tiers = await getEventTiers(eventId);
+        console.log('Loaded tiers:', tiers);
+        setRealTiers(tiers);
+      } catch (error) {
+        console.error('Error loading tiers:', error);
+        setTierError(error.message);
+        // If loading fails, don't block the UI - let it use mock data
+      } finally {
+        setIsLoadingTiers(false);
+      }
+    };
+
+    loadTiers();
+  }, [eventData]);
+
+  // Use real tiers if available, otherwise fallback to mock data
+  const tiersToUse = realTiers.length > 0 ? realTiers : [
+    { tierId: 1, name: 'VIP', price: '0.5', totalQuantity: 50, sold: 10 },
+    { tierId: 2, name: 'General Admission', price: '0.2', totalQuantity: 200, sold: 75 },
   ];
 
   const mockVenueData = {
@@ -37,7 +68,8 @@ const PurchaseFlow = ({ eventData }) => {
     setPurchaseState(prevState => ({
       ...prevState,
       step: 2,
-      selectedTierId: tier.typeId,
+      selectedTier: tier, // Store the full tier object
+      selectedTierId: tier.tierId,
       selectedTierName: tier.name,
       selectedTierPrice: tier.price,
     }));
@@ -61,18 +93,43 @@ const PurchaseFlow = ({ eventData }) => {
 
   const handlePurchase = async () => {
     setPurchaseState(prevState => ({ ...prevState, isPurchasing: true, error: null }));
+
     try {
-      const totalPrice = (parseFloat(purchaseState.selectedTierPrice) * purchaseState.quantity).toString();
-      await buyTicket(
-        eventData.eventId, // Assuming eventData is passed as a prop
-        purchaseState.selectedTierId,
-        purchaseState.selectedSeats,
-        totalPrice
+      // Calculate total price in wei
+      const pricePerTicket = parseFloat(purchaseState.selectedTierPrice);
+      const totalPriceEth = pricePerTicket * purchaseState.quantity;
+      const totalPriceWei = (totalPriceEth * 1e18).toString(); // Convert to wei
+      
+      // Create tier object with tierId property as expected by purchaseTickets
+      const tierWithId = {
+        ...purchaseState.selectedTier,
+        tierId: purchaseState.selectedTierId
+      };
+      
+      // Use eventId from eventData, or fallback to 1 if not provided
+      const eventId = eventData?.eventId || 1;
+      
+      console.log('Attempting purchase with:', {
+        eventId: eventId,
+        tier: tierWithId,
+        quantity: purchaseState.quantity,
+        totalPriceWei
+      });
+      
+      await purchaseTickets(
+        eventId,
+        tierWithId,
+        purchaseState.quantity,
+        totalPriceWei
       );
       setPurchaseState(prevState => ({ ...prevState, isPurchasing: false, purchaseSuccess: true }));
     } catch (error) {
-      console.error(error);
-      setPurchaseState(prevState => ({ ...prevState, isPurchasing: false, error: 'Purchase failed. Please try again.' }));
+      console.error('Purchase error:', error);
+      setPurchaseState(prevState => ({
+        ...prevState,
+        isPurchasing: false,
+        error: `Purchase failed: ${error.message || 'Please try again.'}`
+      }));
     }
   };
 
@@ -89,10 +146,24 @@ const PurchaseFlow = ({ eventData }) => {
     return <div className="text-green-500 font-bold">Purchase Successful!</div>;
   }
 
+  if (isLoadingTiers) {
+    return <div className="p-4">Loading ticket tiers...</div>;
+  }
+
+  if (tierError) {
+    return <div className="p-4 text-red-500">Error loading tiers: {tierError}</div>;
+  }
+
   return (
     <div className="purchase-flow-container p-4">
+      {!eventData && (
+        <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 rounded">
+          <strong>Debug Mode:</strong> Using mock event data (eventId: 1)
+        </div>
+      )}
+      
       {purchaseState.step === 1 && (
-        <TicketTypeSelector tiers={mockTiers} onSelectTier={handleTierSelect} />
+        <TicketTypeSelector tiers={tiersToUse} onSelectTier={handleTierSelect} />
       )}
 
       {purchaseState.step === 2 && (

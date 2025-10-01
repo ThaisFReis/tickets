@@ -11,7 +11,7 @@ const TicketTypeSelector = ({ tiers, selectedTier, onSelectTier }) => {
             key={tier.tierId}
             onClick={() => !isSoldOut && onSelectTier(tier)}
             disabled={isSoldOut}
-            className={`normal-bnt p-4 lg:p-3 text-[10px] rounded-xl lg:rounded-full text-center font-semibold uppercase transition-colors lg:text-base ${
+            className={`normal-bnt p-4 lg:p-3 text-[10px] rounded-xl lg:rounded-xl text-center font-semibold uppercase transition-colors lg:text-base ${
               selectedTier?.tierId === tier.tierId
                 ? 'y2k-btn !rounded-xl'
                 : 'border border-border'

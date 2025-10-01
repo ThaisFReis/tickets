@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contract Debug Tool</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+</head>
+<body>
+    <h1>Contract Debug Tool</h1>
+    <div id="output"></div>
+    
+    <script>
+        const contractAddress = "0x8ee5f726744011c976275eb8c89126377aB29922";
+        const BASE_SEPOLIA_RPC = "https://sepolia.base.org";
+        const BASE_SEPOLIA_CHAIN_ID = "0x14a34"; // 84532 in hex
+        
+        async function debugContract() {
+            const output = document.getElementById('output');
+            
+            try {
+                // Test direct connection to Base Sepolia
+                output.innerHTML += '<h2>Testing Direct Connection to Base Sepolia...</h2>';
+                const provider = new ethers.providers.JsonRpcProvider(BASE_SEPOLIA_RPC);
+                
+                // Test basic connectivity
+                const network = await provider.getNetwork();
+                output.innerHTML += `<p>✅ Connected to network: ${network.name} (Chain ID: ${network.chainId})</p>`;
+                
+                // Test contract bytecode
+                const code = await provider.getCode(contractAddress);
+                if (code === '0x') {
+                    output.innerHTML += `<p>❌ No contract found at address ${contractAddress}</p>`;
+                    output.innerHTML += `<p>This means either:</p>`;
+                    output.innerHTML += `<ul>
+                        <li>Contract is not deployed</li>
+                        <li>Contract address is incorrect</li>
+                        <li>Contract is deployed on a different network</li>
+                    </ul>`;
+                } else {
+                    output.innerHTML += `<p>✅ Contract found at address ${contractAddress}</p>`;
+                    output.innerHTML += `<p>Bytecode length: ${code.length} characters</p>`;
+                    
+                    // Test contract call with minimal ABI
+                    const contractABI = [
+                        "function nextEventId() public view returns (uint256)"
+                    ];
+                    
+                    const contract = new ethers.Contract(contractAddress, contractABI, provider);
+                    
+                    try {
+                        const nextEventId = await contract.nextEventId();
+                        output.innerHTML += `<p>✅ nextEventId call successful: ${nextEventId.toString()}</p>`;
+                    } catch (error) {
+                        output.innerHTML += `<p>❌ nextEventId call failed: ${error.message}</p>`;
+                    }
+                }
+                
+                // Test MetaMask connection if available
+                if (typeof window.ethereum !== 'undefined') {
+                    output.innerHTML += '<h2>Testing MetaMask Connection...</h2>';
+                    
+                    try {
+                        const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+                        output.innerHTML += `<p>Current MetaMask network: ${currentChainId}</p>`;
+                        
+                        if (currentChainId === BASE_SEPOLIA_CHAIN_ID) {
+                            output.innerHTML += `<p>✅ MetaMask is connected to Base Sepolia</p>`;
+                        } else {
+                            output.innerHTML += `<p>❌ MetaMask is NOT connected to Base Sepolia</p>`;
+                            output.innerHTML += `<p>Expected: ${BASE_SEPOLIA_CHAIN_ID}, Got: ${currentChainId}</p>`;
+                        }
+                    } catch (error) {
+                        output.innerHTML += `<p>❌ Failed to check MetaMask network: ${error.message}</p>`;
+                    }
+                } else {
+                    output.innerHTML += '<p>⚠️ MetaMask not detected</p>';
+                }
+                
+            } catch (error) {
+                output.innerHTML += `<p>❌ Debug failed: ${error.message}</p>`;
+            }
+        }
+        
+        // Run debug on page load
+        debugContract();
+    </script>
+</body>
+</html>

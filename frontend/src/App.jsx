@@ -5,7 +5,8 @@ import EventDetailPage from './pages/EventDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import TransactionModal from './components/TransactionModal';
 import Footer from './components/Footer';
-import { fetchAllEvents, connectWallet, purchaseTickets, fetchUserTickets } from './services/ethers';
+import NetworkStatus from './components/NetworkStatus';
+import { fetchAllEvents, connectWallet, purchaseTickets, fetchUserTickets, checkAndSwitchNetwork } from './services/ethers';
 import { eventsMetadata } from './events-metadata';
 import './index.css';
 import EventCardSkeleton from './components/EventCardSkeleton';
@@ -27,6 +28,10 @@ function App() {
         const loadEvents = async () => {
             try {
                 setLoading(true);
+                
+                // Check network first
+                await checkAndSwitchNetwork();
+                
                 const fetchedEvents = await fetchAllEvents();
                 
                 const eventsWithDetails = fetchedEvents.map(event => {
@@ -51,7 +56,11 @@ function App() {
                 setError(null);
             } catch (err) {
                 console.error("Error fetching events from contract:", err);
-                setError("Failed to load events. Please ensure you're connected to the correct network.");
+                if (err.code === 'BAD_DATA') {
+                    setError("Failed to load events. Please ensure you're connected to Base Sepolia testnet and the contract is properly deployed.");
+                } else {
+                    setError("Failed to load events. Please check your network connection and ensure you're connected to the correct network.");
+                }
             } finally {
                 setLoading(false);
             }
@@ -241,6 +250,9 @@ function App() {
                 onNavigate={handleNavigate}
             />
             <main className="flex-grow">
+                <div className="container mx-auto px-4 py-4">
+                    <NetworkStatus />
+                </div>
                 {renderPage()}
             </main>
             <TransactionModal 
