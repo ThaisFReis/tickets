@@ -1,6 +1,6 @@
-# Decentralized Concert Ticket Marketplace
+# EventHorizon - Frontend
 
-This project is a decentralized application (dApp) for buying and selling concert tickets as NFTs on the blockchain. It ensures verifiable ownership and transparent sales, supporting both general admission and assigned seating events.
+React-based frontend for the EventHorizon decentralized ticket marketplace. Provides an intuitive interface for browsing events, purchasing NFT tickets, and managing your ticket collection.
 
 ## Key Features
 
@@ -14,116 +14,179 @@ This project is a decentralized application (dApp) for buying and selling concer
 
 ## Technology Stack
 
--   **Backend (Smart Contract):**
-    -   **Solidity:** Language for the smart contract.
-    -   **Hardhat:** Development environment for compiling, testing, and deploying.
-    -   **OpenZeppelin Contracts:** For robust and secure ERC721 implementations.
--   **Frontend:**
-    -   **React:** UI library for building the user interface.
-    -   **Vite:** Fast frontend build tool and development server.
-    -   **Ethers.js:** For all blockchain interactions from the frontend.
-    -   **Tailwind CSS:** For styling the application.
--   **Testing:**
-    -   **Hardhat (Chai):** For testing the Solidity smart contract.
-    -   **Vitest & React Testing Library:** For testing the frontend components and integration.
+-   **React 19.1.1**: UI library with latest features
+-   **Vite**: Fast build tool and development server
+-   **Ethers.js 6.15.0**: Web3 blockchain interactions
+-   **Tailwind CSS 3.4.4**: Utility-first styling
+-   **Lucide React**: Icon library
+-   **React Zoom Pan Pinch**: Interactive venue maps
+-   **QRCode.react**: QR code generation for tickets
+-   **Vitest + React Testing Library**: Component and integration testing
 
-## Getting Started
+## Installation
 
 ### Prerequisites
 
--   Node.js (v18 or later)
+-   Node.js v18+
 -   npm
--   A crypto wallet browser extension (e.g., MetaMask)
+-   MetaMask browser extension
+-   Backend deployed and running (see [backend README](../backend/README.md))
 
-### 1. Backend Setup
-
-First, set up and deploy the smart contract.
+### Setup
 
 ```bash
-# Navigate to the backend directory
-cd backend
-
 # Install dependencies
 npm install
 
-# Run a local Hardhat blockchain node
-npx hardhat node
-```
-
-In a **new terminal**, deploy the contract to the local node:
-
-```bash
-# Navigate to the backend directory
-cd backend
-
-# Deploy the contract (this will automatically create sample events and copy files to frontend)
-npx hardhat run scripts/deploy.js --network localhost
-```
-
-### 2. Frontend Setup
-
-After the contract is deployed, set up the frontend.
-
-```bash
-# Navigate to the frontend directory
-cd frontend
-
-# Install dependencies
-npm install
-```
-
-The deployment script automatically handles copying the contract ABI and address to the frontend, so no manual file copying is needed.
-
-Start the frontend development server:
-
-```bash
-# Start the app
+# Start development server
 npm run dev
 ```
 
-You can now access the dApp at `http://localhost:5173` (or the address provided by Vite). The deployment script has already created two sample events for testing:
-- **Rock Fest 2025** - General admission event with 100 tickets at 0.05 ETH each
-- **Jazz Night** - Assigned seating event with 150 seats at 0.1 ETH each
+Access the application at `http://localhost:5173`
 
-## Running Tests
+### Required Configuration
 
-The project follows a strict Test-Driven Development (TDD) methodology.
+The deployment script from the backend automatically creates:
+- `contract-address.json`: Deployed contract address
+- `ConcertTicketMarketplace.json`: Contract ABI
 
-### Backend Tests
+Ensure the backend is deployed before starting the frontend.
 
-To run the smart contract tests:
+## Available Scripts
 
 ```bash
-cd backend
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Run tests
+npm test
+
+# Lint code
+npm run lint
+```
+
+## Testing
+
+Run component and integration tests:
+
+```bash
 npm test
 ```
 
-### Frontend Tests
+Tests use Vitest and React Testing Library, covering:
+- Component rendering and interactions
+- Web3 integration
+- Event listing and filtering
+- Ticket purchasing flows
+- User profile management
 
-To run the component and integration tests for the React app:
+## Project Structure
 
-```bash
-cd frontend
-npm test
 ```
+frontend/
+├── src/
+│   ├── components/        # React components
+│   │   ├── EventCard.jsx
+│   │   ├── NetworkStatus.jsx
+│   │   ├── PurchaseFlow.jsx
+│   │   ├── TicketCard.jsx
+│   │   ├── TicketTypeSelector.jsx
+│   │   └── TransactionModal.jsx
+│   ├── services/
+│   │   └── ethers.js     # Web3 integration
+│   ├── App.jsx           # Main application
+│   └── main.jsx          # Entry point
+├── contract-address.json # Deployed contract address
+├── ConcertTicketMarketplace.json # Contract ABI
+└── package.json
+```
+
+## Features
+
+### Event Browsing
+- View all available events with details
+- Filter by event type (General Admission / Assigned Seating)
+- Real-time ticket availability
+
+### Ticket Purchase
+- Connect wallet via MetaMask
+- Purchase general admission tickets
+- Select specific seats with interactive venue map
+- Transaction confirmation and status
+
+### User Profile
+- View owned tickets
+- Filter by upcoming/past events
+- Display ticket QR codes
+- Seat information for assigned tickets
+
+### Network Management
+- Automatic network detection
+- Network switching prompt
+- Connection status indicators
+
+## Configuration
+
+### Supported Networks
+
+**Development**
+- Network: Hardhat Local
+- RPC: http://localhost:8545
+- Chain ID: 31337
+
+**Production**
+- Network: Base Sepolia
+- Chain ID: 84532
+
+### MetaMask Setup
+
+Add local network in MetaMask:
+1. Open MetaMask > Settings > Networks > Add Network
+2. Enter:
+   - Network Name: Hardhat Local
+   - RPC URL: http://localhost:8545
+   - Chain ID: 31337
+   - Currency Symbol: ETH
+
+Import test account (shown when running `npx hardhat node`)
 
 ## Troubleshooting
 
-### Common Issues
+**Events not loading**
+- Verify backend node is running
+- Check contract is deployed
+- Confirm MetaMask is on correct network (Chain ID: 31337)
 
-**Events not loading / "Error fetching events"**
-- Ensure the Hardhat local node is running (`npx hardhat node` in backend directory)
-- Make sure you redeployed after starting the node (`npx hardhat run scripts/deploy.js --network localhost`)
-- Check that your MetaMask is connected to the local network (http://localhost:8545, Chain ID: 31337)
+**Transaction failures**
+- Ensure sufficient ETH balance
+- Check correct network connection
+- Verify contract address in `contract-address.json`
 
-**MetaMask Connection Issues**
-- Make sure MetaMask is installed and unlocked
-- Add the local Hardhat network to MetaMask:
-  - Network Name: Hardhat Local
-  - RPC URL: http://localhost:8545
-  - Chain ID: 31337
-  - Currency Symbol: ETH
+**MetaMask not connecting**
+- Unlock MetaMask extension
+- Approve connection request
+- Add and select Hardhat Local network
 
-**Transaction Failures**
-- Ensure you have sufficient ETH balance in your MetaMask account
-- Import one of the Hardhat test accounts for development (private keys shown when running `npx hardhat node`)
+## Dependencies
+
+Production:
+- react, react-dom: ^19.1.1
+- ethers: ^6.15.0
+- tailwindcss: ^3.4.4
+- lucide-react: ^0.543.0
+- qrcode.react: ^4.2.0
+
+Development:
+- vite: ^7.1.2
+- vitest: ^3.2.4
+- @testing-library/react: ^16.3.0
+
+## License
+
+ISC

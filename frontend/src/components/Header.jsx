@@ -31,7 +31,7 @@ const Header = ({ walletConnected, userAddress, onConnectWallet, onNavigate }) =
                         <Hexagon className="w-8 h-8 text-primary animate-spin" style={{ animationDuration: '8s' }} />
                         <div className="overflow-hidden">
                             <span className={`block whitespace-nowrap text-xl sm:text-2xl font-extrabold uppercase tracking-widest transition-all duration-1000 ease-out ${isTextVisible ? 'max-w-xs' : 'max-w-0'}`}>
-                                TicketChain
+                                EventHorizon
                             </span>
                         </div>
                     </div>

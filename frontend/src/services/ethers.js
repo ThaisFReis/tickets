@@ -324,11 +324,9 @@ const fetchAllEvents = async () => {
   try {
     // Check network first
     await checkAndSwitchNetwork();
-    
-    // Log 1: Verificando se o objeto do contrato foi criado
+
     const contract = await getContract();
-    console.log("1. Objeto do Contrato criado:", contract);
-    console.log("Endereço do contrato que está sendo chamado:", contract.target);
+    console.log("Contract created:", contract.target);
 
     // Log current network info
     if (window.ethereum) {
@@ -337,20 +335,14 @@ const fetchAllEvents = async () => {
       console.log("Expected Hardhat Local chain ID:", BASE_SEPOLIA_CHAIN_ID);
     }
 
-    // Log 2: Tentando chamar a primeira função do contrato
-    console.log("2. Chamando a função 'nextEventId' no contrato...");
+    console.log("Fetching event count...");
     const eventCount = await contract.nextEventId();
-    
-    // Log 3: Verificando o resultado da chamada
-    // Se chegarmos aqui, a conexão funcionou!
-    console.log("3. Sucesso! O valor de 'nextEventId' é:", eventCount.toString());
+    console.log("Total events:", eventCount.toString());
 
+    // Fetch events sequentially to avoid overwhelming the RPC
     const events = [];
     for (let i = 1; i < eventCount; i++) {
-      console.log(`4. Buscando detalhes para o evento de ID: ${i}`);
       const eventDetails = await contract.getEventDetails(i);
-      console.log(`5. Detalhes recebidos para o evento ${i}:`, eventDetails);
-
       const tiers = await getEventTiers(i, eventDetails);
       events.push({
         eventId: BigInt(i),
@@ -360,12 +352,12 @@ const fetchAllEvents = async () => {
         tiers: tiers,
       });
     }
-    console.log("6. Array final de eventos montado:", events);
+
+    console.log("Events loaded:", events.length);
     return events;
   } catch (error) {
     console.error("Error fetching all events:", error);
-    console.log("Ocorreu um erro DENTRO da função fetchAllEvents.");
-    
+
     // Additional debugging info
     if (error.code === 'BAD_DATA') {
       console.error("BAD_DATA error detected. This usually means:");
@@ -374,7 +366,7 @@ const fetchAllEvents = async () => {
       console.error("3. Contract function doesn't exist");
       console.error("4. Network connection issues");
     }
-    
+
     throw error;
   }
 };
@@ -402,27 +394,42 @@ const getEventTiers = async (eventId, eventDetails) => {
       (l) => l.name === eventMeta?.location
     );
 
+    // Fetch tiers in batches to avoid overwhelming the RPC
+    const batchSize = 5;
+    const maxTiers = 20;
     const tiers = [];
-    let i = 1;
-    while (true) {
-      try {
-        const tier = await contract.getTicketTier(eventId, i);
-        const tierName = tier.name;
-        const tierType = locationMeta?.seating[tierName]?.type || "standing";
 
-        tiers.push({
-          tierId: Number(tier.typeId),
-          name: tierName,
-          price: tier.price.toString(),
-          totalQuantity: Number(tier.quantity),
-          sold: Number(tier.sold),
-          type: tierType,
-        });
-        i++;
-      } catch {
-        break; // Assumes error means no more tiers
+    for (let start = 1; start <= maxTiers; start += batchSize) {
+      const end = Math.min(start + batchSize, maxTiers + 1);
+      const batchPromises = [];
+
+      for (let i = start; i < end; i++) {
+        batchPromises.push(
+          contract.getTicketTier(eventId, i)
+            .then(tier => ({
+              tierId: Number(tier.typeId),
+              name: tier.name,
+              price: tier.price.toString(),
+              totalQuantity: Number(tier.quantity),
+              sold: Number(tier.sold),
+              type: locationMeta?.seating[tier.name]?.type || "standing",
+            }))
+            .catch(() => null)
+        );
       }
+
+      const results = await Promise.all(batchPromises);
+      const validTiers = results.filter(tier => tier !== null);
+
+      // If we got fewer valid tiers than the batch size, we've reached the end
+      if (validTiers.length < batchSize) {
+        tiers.push(...validTiers);
+        break;
+      }
+
+      tiers.push(...validTiers);
     }
+
     return tiers;
   } catch (error) {
     console.error("Error fetching event tiers:", error);

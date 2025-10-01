@@ -31,7 +31,7 @@ const ViewTicketModal = ({ ticket, onClose }) => {
                     {/* QR Code Section */}
                     <div className="flex flex-col items-center justify-center bg-secondary p-1 rounded-xl h-fit m-auto">
                         <QRCodeSVG 
-                            value={`TicketChain-NFT-${ticket.tokenId}`}
+                            value={`EventHorizon-NFT-${ticket.tokenId}`}
                             size={Fullscreen}
                             bgColor={"#FFFFFF"}
                             fgColor={"#000000"}
