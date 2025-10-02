@@ -6,7 +6,7 @@ const NetworkStatus = () => {
     const [currentNetwork, setCurrentNetwork] = useState('');
     const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
 
-    const BASE_SEPOLIA_CHAIN_ID = "0x14a34"; // 84532 in hex
+    const BASE_SEPOLIA_CHAIN_ID = "0x7a69"; // 31337 in hex (Hardhat local network)
 
     useEffect(() => {
         const checkNetwork = async () => {
@@ -71,7 +71,7 @@ const NetworkStatus = () => {
     if (networkStatus === 'correct') {
         return (
             <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                <p>✅ Connected to Base Sepolia testnet</p>
+                <p>✅ Connected to Hardhat Local testnet</p>
             </div>
         );
     }
@@ -80,7 +80,7 @@ const NetworkStatus = () => {
         return (
             <div className="fixed bottom-4 right-4 bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-300 text-purple-900 px-4 py-3 rounded-xl shadow-lg max-w-sm z-50">
                 <p className="font-semibold text-sm mb-1">⚠️ Wrong network</p>
-                <p className="text-purple-700 text-xs mb-2">Requires Base Sepolia. Current: {currentNetwork}</p>
+                <p className="text-purple-700 text-xs mb-2">Requires Hardhat Local. Current: {currentNetwork}</p>
                 <button
                     onClick={handleSwitchNetwork}
                     className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-1.5 px-4 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md text-sm w-full"
