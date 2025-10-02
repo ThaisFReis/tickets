@@ -263,6 +263,7 @@ const purchaseTickets = async (eventId, tier, quantity, totalPriceWei) => {
     }
 
     // Estimate gas first to catch any contract-level issues
+    let gasLimit = 500000; // Default fallback
     try {
       console.log('Estimating gas for purchase with params:', {
         eventId,
@@ -278,6 +279,10 @@ const purchaseTickets = async (eventId, tier, quantity, totalPriceWei) => {
         { value: totalPriceWei }
       );
       console.log('Gas estimate successful:', gasEstimate.toString());
+      
+      // Use estimated gas + 20% buffer, minimum 500,000
+      gasLimit = Math.max(Number(gasEstimate) * 120 / 100, 500000);
+      console.log('Using gas limit:', gasLimit);
     } catch (estimateError) {
       console.error('Gas estimation failed:', estimateError);
       
@@ -301,14 +306,14 @@ const purchaseTickets = async (eventId, tier, quantity, totalPriceWei) => {
       throw new Error(`Transaction validation failed: ${estimateError.message}`);
     }
 
-    console.log('Attempting transaction with explicit gas limit...');
+    console.log('Attempting transaction with calculated gas limit:', gasLimit);
     const transaction = await contract.purchaseTickets(
       eventId,
       tierId,
       quantity,
       {
         value: totalPriceWei,
-        gasLimit: 300000 // Explicit gas limit to bypass estimation issues
+        gasLimit: gasLimit // Use calculated gas limit
       }
     );
     console.log('Transaction sent:', transaction.hash);
