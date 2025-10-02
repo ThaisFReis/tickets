@@ -13,7 +13,7 @@ if (window.ethereum) {
   provider = new ethers.JsonRpcProvider("https://sepolia.base.org");
 }
 
-const BASE_SEPOLIA_CHAIN_ID = "0x7a69"; // 31337 in hex (Hardhat local network)
+const BASE_SEPOLIA_CHAIN_ID = "0x7a69"; // (Hardhat local network)
 const BASE_SEPOLIA_RPC = "http://127.0.0.1:8545"; // Local Hardhat network
 
 const getSigner = async () => {
